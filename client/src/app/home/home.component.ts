@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
+
 // import { OrbitControls } from 'three-orbitcontrols-ts';
 
 @Component({
@@ -12,6 +13,8 @@ import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 export class HomeComponent {
   constructor() {}
 
+  isOrbit: boolean = false;
+
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer(); // give space to render the animated part (on HTML canvas) by webGl
   scene = new THREE.Scene();
@@ -19,10 +22,12 @@ export class HomeComponent {
 
   planeColor: number = 0xffffff; //  or THREE.ColorRepresentation (type)
   boxColor: number = 0x3256a8;
+  sphereColor: number = 0x32a852;
 
   orbit: OrbitControls | null = null;
 
   box: THREE.Mesh | null = null;
+  sphere: THREE.Mesh | null = null;
 
   planeBox: THREE.Mesh | null = null;
 
@@ -43,6 +48,8 @@ export class HomeComponent {
     this.container = document.getElementById('playground'); // element where we gonna put renderer
     if (!this.container) return;
     this.container.appendChild(this.renderer.domElement); // add the renderer inside our specified div
+
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(
       this.container?.clientWidth,
       this.container?.clientHeight
@@ -51,6 +58,7 @@ export class HomeComponent {
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
     this.createBox();
+    this.createSphere();
     this.createFloor();
 
     this.scene.add(axesHelper);
@@ -74,13 +82,13 @@ export class HomeComponent {
     this.orbit.enableZoom = true;
     this.orbit.zoomSpeed = 1;
     this.orbit.enablePan = true;
-    this.orbit.enableRotate = false; // true to enable orbiting..
+    this.orbit.enableRotate = this.isOrbit; // true to enable orbiting..
 
     // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
 
-    if (this.box)
+    if (this.box && this.sphere)
       this.dragControl = new DragControls(
-        [this.box],
+        [this.box, this.sphere],
         this.camera,
         this.renderer.domElement
       );
@@ -89,9 +97,21 @@ export class HomeComponent {
     this.listenEvent();
   }
 
+  enableOrbit(checked: boolean) {
+    if (this.orbit) this.orbit.enableRotate = checked;
+  }
+
   animate() {
     requestAnimationFrame(() => this.animate());
     // this.orbit?.update();
+    this.box?.position.clamp(
+      this.box.userData['limit'].min,
+      this.box.userData['limit'].max
+    );
+    this.sphere?.position.clamp(
+      this.sphere.userData['limit'].min,
+      this.sphere.userData['limit'].max
+    );
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
@@ -99,12 +119,17 @@ export class HomeComponent {
     if (!this.dragControl) return;
     this.dragControl.addEventListener('drag', (e) => {
       if (!this.orbit) return;
-      // this.orbit.enableZoom = false;
-      // this.orbit.zoomSpeed = 1;
-      // this.orbit.enablePan = false;
-      // this.orbit.enabled = false;
       e.object.position.y = 0.5;
-      // if (this.camera) this.renderer.render(this.scene, this.camera);
+    });
+
+    this.dragControl.addEventListener('dragstart', (e) => {
+      // ensure or check the type whether it's a mesh (geometry + material)..
+      if (e.object instanceof THREE.Mesh) e.object.material.color.set(0xff0000);
+    });
+
+    this.dragControl.addEventListener('dragend', (e) => {
+      if (e.object instanceof THREE.Mesh)
+        e.object.material.color.set(this.boxColor);
     });
   }
 
@@ -128,9 +153,30 @@ export class HomeComponent {
     let boxGeometry = new THREE.BoxGeometry();
     let boxMaterial = new THREE.MeshBasicMaterial({ color: this.boxColor });
     this.box = new THREE.Mesh(boxGeometry, boxMaterial);
+    // this.box.geometry.translate(0, 0.5, 0); // to translate the pivot ( origin point ) of the geometry..
     this.box.position.set(0, 0.5, 0);
     this.scene.add(this.box);
 
     this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
+    this.box.userData['limit'] = {
+      min: new THREE.Vector3(-4.5, 0.5, -4.5),
+      max: new THREE.Vector3(4.5, 0.5, 4.5),
+    };
+  }
+
+  createSphere() {
+    let SphereGeometry = new THREE.SphereGeometry(0.5);
+    let sphereMaterial = new THREE.MeshBasicMaterial({
+      color: this.sphereColor,
+    });
+    this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
+    this.sphere.position.set(2, 0.5, 0);
+    this.scene.add(this.sphere);
+
+    this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
+    this.sphere.userData['limit'] = {
+      min: new THREE.Vector3(-4.5, 0.5, -4.5),
+      max: new THREE.Vector3(4.5, 0.5, 4.5),
+    };
   }
 }

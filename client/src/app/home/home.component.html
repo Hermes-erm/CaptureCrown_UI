@@ -1,3 +1,18 @@
 <div class="home">
-  <div id="playground"></div>
+  <div class="container">
+    <div id="playground"></div>
+    <div class="options">
+      <div class="orbit">
+        <p>Orbitting :</p>
+        <label class="toggle-switch square">
+          <input
+            type="checkbox"
+            [ngModel]="isOrbit"
+            (ngModelChange)="enableOrbit($event)"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
 </div>
