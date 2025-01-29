@@ -13,10 +13,10 @@ import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 export class HomeComponent {
   constructor() {}
 
-  isOrbit: boolean = false;
+  isOrbit: boolean = true;
 
   container: HTMLElement | null = null;
-  renderer = new THREE.WebGLRenderer(); // give space to render the animated part (on HTML canvas) by webGl
+  renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
@@ -28,13 +28,19 @@ export class HomeComponent {
 
   box: THREE.Mesh | null = null;
   sphere: THREE.Mesh | null = null;
-
   planeBox: THREE.Mesh | null = null;
 
   gridHelper = new THREE.GridHelper(10, 10);
+  directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
+  ambientLight = new THREE.AmbientLight(0xffffff, 2);
+  directionalLightHelper = new THREE.DirectionalLightHelper(
+    this.directionalLight
+  );
 
   mousePosition = new THREE.Vector2();
   mouseMove = new THREE.Vector2();
+
+  objects: THREE.Object3D[] = [];
 
   rayCaster = new THREE.Raycaster();
 
@@ -58,11 +64,14 @@ export class HomeComponent {
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
     this.createBox();
-    this.createSphere();
+    // this.createSphere();
     this.createFloor();
 
     this.scene.add(axesHelper);
     this.scene.add(this.gridHelper);
+    this.directionalLight.position.set(-4, 5, 3);
+    this.directionalLight.lookAt(0, 0, 0);
+    this.scene.add(this.directionalLight, this.ambientLight); //this.directionalLightHelper
 
     this.camera = new THREE.PerspectiveCamera(
       75, // fov, camera angle of view ( that cover )
@@ -86,12 +95,11 @@ export class HomeComponent {
 
     // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
 
-    if (this.box && this.sphere)
-      this.dragControl = new DragControls(
-        [this.box, this.sphere],
-        this.camera,
-        this.renderer.domElement
-      );
+    this.dragControl = new DragControls(
+      this.objects,
+      this.camera,
+      this.renderer.domElement
+    );
 
     this.animate();
     this.listenEvent();
@@ -117,26 +125,55 @@ export class HomeComponent {
 
   listenEvent() {
     if (!this.dragControl) return;
-    this.dragControl.addEventListener('drag', (e) => {
-      if (!this.orbit) return;
-      e.object.position.y = 0.5;
-    });
+    this.dragControl.addEventListener('drag', this.dragEvent);
 
-    this.dragControl.addEventListener('dragstart', (e) => {
-      // ensure or check the type whether it's a mesh (geometry + material)..
-      if (e.object instanceof THREE.Mesh) e.object.material.color.set(0xff0000);
-    });
+    this.dragControl.addEventListener('dragstart', this.dragStartEvent);
 
     this.dragControl.addEventListener('dragend', (e) => {
       if (e.object instanceof THREE.Mesh)
         e.object.material.color.set(this.boxColor);
     });
+
+    window.addEventListener('keydown', this.keydownEvent.bind(this)); // bind current class or local to the listener function, else it takes the "this" ( window instance ) in default
+  }
+
+  dragEvent(e: any) {
+    if (!this.orbit) return;
+    e.object.position.y = 0.5;
+  }
+
+  dragStartEvent(e: any) {
+    // ensure or check the type whether it's a mesh (geometry + material)..
+    if (e.object instanceof THREE.Mesh) e.object.material.color.set(0xff0000);
+  }
+
+  keydownEvent(e: KeyboardEvent) {
+    if (e.key === 'w') this.moveUp();
+    else if (e.key == 'a') this.moveLeft();
+    else if (e.key == 'd') this.moveRight();
+    else if (e.key == 's') this.moveDown();
+  }
+
+  moveUp() {
+    if (this.box) this.box.position.z -= 0.5;
+  }
+
+  moveDown() {
+    if (this.box) this.box.position.z += 0.5;
+  }
+
+  moveLeft() {
+    if (this.box) this.box.position.x -= 0.5;
+  }
+
+  moveRight() {
+    if (this.box) this.box.position.x += 0.5;
   }
 
   createFloor() {
     let depth = 0.2;
     let planeBoxGeometry = new THREE.BoxGeometry(10, 10, depth);
-    let planeBoxMaterial = new THREE.MeshBasicMaterial({
+    let planeBoxMaterial = new THREE.MeshStandardMaterial({
       color: this.planeColor,
       side: THREE.DoubleSide,
     });
@@ -151,11 +188,12 @@ export class HomeComponent {
 
   createBox() {
     let boxGeometry = new THREE.BoxGeometry();
-    let boxMaterial = new THREE.MeshBasicMaterial({ color: this.boxColor });
+    let boxMaterial = new THREE.MeshStandardMaterial({ color: this.boxColor });
     this.box = new THREE.Mesh(boxGeometry, boxMaterial);
     // this.box.geometry.translate(0, 0.5, 0); // to translate the pivot ( origin point ) of the geometry..
     this.box.position.set(0, 0.5, 0);
     this.scene.add(this.box);
+    this.objects.push(this.box);
 
     this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
     this.box.userData['limit'] = {
@@ -166,12 +204,13 @@ export class HomeComponent {
 
   createSphere() {
     let SphereGeometry = new THREE.SphereGeometry(0.5);
-    let sphereMaterial = new THREE.MeshBasicMaterial({
+    let sphereMaterial = new THREE.MeshStandardMaterial({
       color: this.sphereColor,
     });
     this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
     this.sphere.position.set(2, 0.5, 0);
     this.scene.add(this.sphere);
+    this.objects.push(this.sphere);
 
     this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
