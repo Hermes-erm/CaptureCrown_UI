@@ -21,7 +21,6 @@
     "@angular/router": "^18.0.0",
     "primeng": "^19.0.5",
     "rxjs": "~7.8.0",
-    "three-orbitcontrols-ts": "^0.1.2",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },

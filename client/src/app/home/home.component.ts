@@ -16,6 +16,8 @@ export class HomeComponent {
   isOrbit: boolean = true;
   isKeyOpt: boolean = false;
 
+  rotationDegree: number = 10;
+
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
   scene = new THREE.Scene();
@@ -65,8 +67,8 @@ export class HomeComponent {
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
     this.createBox();
-    // this.createSphere();
     this.createFloor();
+    // this.createSphere();
 
     this.scene.add(axesHelper);
     this.scene.add(this.gridHelper);
@@ -81,7 +83,7 @@ export class HomeComponent {
       500 // far clipping plane
     );
 
-    this.camera.position.set(5, 5, 5); // x, y, z
+    this.camera.position.set(0, 6, 7); // x, y, z
     this.camera.lookAt(0, 0, 0);
 
     // // now render the scene
@@ -155,25 +157,27 @@ export class HomeComponent {
   keydownEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
     if (e.key === 'w') this.moveUp();
-    else if (e.key == 'a') this.moveLeft();
-    else if (e.key == 'd') this.moveRight();
+    else if (e.key == 'a') this.rotateLeft(); // rotate left
+    else if (e.key == 'd') this.rotateRight(); // rotate right
     else if (e.key == 's') this.moveDown();
   }
 
   moveUp() {
-    if (this.box) this.box.position.z -= 0.5;
+    if (this.box) this.box.translateZ(-0.5); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
   }
 
   moveDown() {
-    if (this.box) this.box.position.z += 0.5;
+    if (this.box) this.box.translateZ(0.5);
   }
 
-  moveLeft() {
-    if (this.box) this.box.position.x -= 0.5;
+  rotateLeft() {
+    let rad = this.rotationDegree * (Math.PI / 180);
+    if (this.box) this.box.rotateY(rad); //position.x -= 0.5;
   }
 
-  moveRight() {
-    if (this.box) this.box.position.x += 0.5;
+  rotateRight() {
+    let rad = this.rotationDegree * (Math.PI / 180);
+    if (this.box) this.box.rotateY(-rad); //position.x += 0.5;
   }
 
   createFloor() {
