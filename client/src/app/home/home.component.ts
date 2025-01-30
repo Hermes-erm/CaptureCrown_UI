@@ -14,6 +14,7 @@ export class HomeComponent {
   constructor() {}
 
   isOrbit: boolean = true;
+  isKeyOpt: boolean = false;
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
@@ -109,6 +110,10 @@ export class HomeComponent {
     if (this.orbit) this.orbit.enableRotate = checked;
   }
 
+  enableKeyOpt(checked: boolean) {
+    this.isKeyOpt = checked;
+  }
+
   animate() {
     requestAnimationFrame(() => this.animate());
     // this.orbit?.update();
@@ -148,6 +153,7 @@ export class HomeComponent {
   }
 
   keydownEvent(e: KeyboardEvent) {
+    if (!this.isKeyOpt) return;
     if (e.key === 'w') this.moveUp();
     else if (e.key == 'a') this.moveLeft();
     else if (e.key == 'd') this.moveRight();

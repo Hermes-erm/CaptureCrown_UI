@@ -13,6 +13,18 @@
           <span class="slider"></span>
         </label>
       </div>
+      <br />
+      <div class="keyboard-Control">
+        <p>key-Opt :</p>
+        <label class="toggle-switch square">
+          <input
+            type="checkbox"
+            [ngModel]="isKeyOpt"
+            (ngModelChange)="enableKeyOpt($event)"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
   </div>
 </div>
