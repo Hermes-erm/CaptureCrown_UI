@@ -3,8 +3,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 
-// import { OrbitControls } from 'three-orbitcontrols-ts';
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -16,7 +14,13 @@ export class HomeComponent {
   isOrbit: boolean = true;
   isKeyOpt: boolean = false;
 
-  rotationDegree: number = 10;
+  key_w: number = 0;
+  key_a: number = 0;
+  key_s: number = 0;
+  key_d: number = 0;
+
+  moveDistance: number = 0.1;
+  rotationDegree: number = 2;
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
@@ -33,7 +37,7 @@ export class HomeComponent {
   sphere: THREE.Mesh | null = null;
   planeBox: THREE.Mesh | null = null;
 
-  gridHelper = new THREE.GridHelper(10, 10);
+  gridHelper = new THREE.GridHelper(50, 50);
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
   ambientLight = new THREE.AmbientLight(0xffffff, 2);
   directionalLightHelper = new THREE.DirectionalLightHelper(
@@ -116,8 +120,17 @@ export class HomeComponent {
     this.isKeyOpt = checked;
   }
 
+  // count: number = 0;
+
   animate() {
-    requestAnimationFrame(() => this.animate());
+    requestAnimationFrame(() => this.animate()); // runs on 60 FPS
+    // this.count++;
+    // if (this.count % 60 == 0) console.log(this.count);
+
+    if (this.key_w) this.moveUp();
+    if (this.key_a) this.rotateLeft();
+    if (this.key_d) this.rotateRight();
+    if (this.key_s) this.moveDown();
     // this.orbit?.update();
     this.box?.position.clamp(
       this.box.userData['limit'].min,
@@ -142,6 +155,7 @@ export class HomeComponent {
     });
 
     window.addEventListener('keydown', this.keydownEvent.bind(this)); // bind current class or local to the listener function, else it takes the "this" ( window instance ) in default
+    window.addEventListener('keyup', this.keyUpEvent.bind(this));
   }
 
   dragEvent(e: any) {
@@ -156,18 +170,46 @@ export class HomeComponent {
 
   keydownEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
-    if (e.key === 'w') this.moveUp();
-    else if (e.key == 'a') this.rotateLeft(); // rotate left
-    else if (e.key == 'd') this.rotateRight(); // rotate right
-    else if (e.key == 's') this.moveDown();
+    switch (e.key) {
+      case 'w':
+        this.key_w = 1;
+        break;
+      case 'a':
+        this.key_a = 1;
+        break;
+      case 's':
+        this.key_s = 1;
+        break;
+      case 'd':
+        this.key_d = 1;
+        break;
+    }
+  }
+
+  keyUpEvent(e: KeyboardEvent) {
+    if (!this.isKeyOpt) return;
+    switch (e.key) {
+      case 'w':
+        this.key_w = 0;
+        break;
+      case 'a':
+        this.key_a = 0;
+        break;
+      case 's':
+        this.key_s = 0;
+        break;
+      case 'd':
+        this.key_d = 0;
+        break;
+    }
   }
 
   moveUp() {
-    if (this.box) this.box.translateZ(-0.5); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
+    if (this.box) this.box.translateZ(-this.moveDistance); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
   }
 
   moveDown() {
-    if (this.box) this.box.translateZ(0.5);
+    if (this.box) this.box.translateZ(this.moveDistance);
   }
 
   rotateLeft() {
@@ -182,7 +224,7 @@ export class HomeComponent {
 
   createFloor() {
     let depth = 0.2;
-    let planeBoxGeometry = new THREE.BoxGeometry(10, 10, depth);
+    let planeBoxGeometry = new THREE.BoxGeometry(50, 50, depth);
     let planeBoxMaterial = new THREE.MeshStandardMaterial({
       color: this.planeColor,
       side: THREE.DoubleSide,
@@ -207,8 +249,8 @@ export class HomeComponent {
 
     this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
     this.box.userData['limit'] = {
-      min: new THREE.Vector3(-4.5, 0.5, -4.5),
-      max: new THREE.Vector3(4.5, 0.5, 4.5),
+      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      max: new THREE.Vector3(24.5, 0.5, 24.5),
     };
   }
 
