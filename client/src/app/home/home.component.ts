@@ -46,6 +46,7 @@ export class HomeComponent {
 
   mousePosition = new THREE.Vector2();
   mouseMove = new THREE.Vector2();
+  vec = new THREE.Vector3();
 
   objects: THREE.Object3D[] = [];
 
@@ -87,8 +88,11 @@ export class HomeComponent {
       500 // far clipping plane
     );
 
-    this.camera.position.set(0, 6, 7); // x, y, z
+    this.camera.position.set(0, 6, 7);
     this.camera.lookAt(0, 0, 0);
+
+    // this.pivot.add(this.camera); // uncomment to attach with it cube..
+    // this.scene.add(this.pivot);
 
     // // now render the scene
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement); // Also can it refered as => which navigate the scene by angular view
@@ -131,15 +135,16 @@ export class HomeComponent {
     if (this.key_a) this.rotateLeft();
     if (this.key_d) this.rotateRight();
     if (this.key_s) this.moveDown();
-    // this.orbit?.update();
+    this.updateCameraPos();
+
     this.box?.position.clamp(
       this.box.userData['limit'].min,
       this.box.userData['limit'].max
     );
-    this.sphere?.position.clamp(
-      this.sphere.userData['limit'].min,
-      this.sphere.userData['limit'].max
-    );
+    // this.sphere?.position.clamp(
+    //   this.sphere.userData['limit'].min,
+    //   this.sphere.userData['limit'].max
+    // );
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
@@ -254,13 +259,15 @@ export class HomeComponent {
     };
   }
 
+  pivot: THREE.Object3D = new THREE.Object3D();
+
   createSphere() {
     let SphereGeometry = new THREE.SphereGeometry(0.5);
     let sphereMaterial = new THREE.MeshStandardMaterial({
       color: this.sphereColor,
     });
     this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
-    this.sphere.position.set(2, 0.5, 0);
+    this.sphere.position.set(0, 0.5, 4);
     this.scene.add(this.sphere);
     this.objects.push(this.sphere);
 
@@ -269,5 +276,14 @@ export class HomeComponent {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
       max: new THREE.Vector3(24.5, 0.5, 24.5),
     };
+  }
+
+  updateCameraPos() {
+    this.box?.getWorldPosition(this.vec);
+    this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
+
+    let euler = new THREE.Euler();
+    euler = this.box?.rotation.clone() || euler; // clone and copy the orientation / rotation of box in to pivot
+    this.pivot.rotation.copy(euler);
   }
 }
