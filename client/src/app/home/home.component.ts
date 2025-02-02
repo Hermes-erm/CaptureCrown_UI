@@ -72,7 +72,7 @@ export class HomeComponent {
 
     this.createBox();
     this.createFloor();
-    // this.createSphere();
+    this.createSphere();
 
     this.scene.add(axesHelper);
     this.scene.add(this.gridHelper);
@@ -123,7 +123,7 @@ export class HomeComponent {
   // count: number = 0;
 
   animate() {
-    requestAnimationFrame(() => this.animate()); // runs on 60 FPS
+    requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
     // this.count++;
     // if (this.count % 60 == 0) console.log(this.count);
 
@@ -188,6 +188,11 @@ export class HomeComponent {
 
   keyUpEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
+    let dir = new THREE.Vector3();
+    this.box?.getWorldDirection(dir);
+    this.sphere?.position.set(dir.x, dir.y, dir.z);
+    // this.sphere.tra
+    console.log(dir);
     switch (e.key) {
       case 'w':
         this.key_w = 0;
@@ -266,8 +271,8 @@ export class HomeComponent {
 
     this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
-      min: new THREE.Vector3(-4.5, 0.5, -4.5),
-      max: new THREE.Vector3(4.5, 0.5, 4.5),
+      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      max: new THREE.Vector3(24.5, 0.5, 24.5),
     };
   }
 }
