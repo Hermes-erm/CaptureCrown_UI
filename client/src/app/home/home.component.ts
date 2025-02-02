@@ -11,8 +11,8 @@ import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 export class HomeComponent {
   constructor() {}
 
-  isOrbit: boolean = true;
-  isKeyOpt: boolean = false;
+  isOrbit: boolean = false;
+  isKeyOpt: boolean = true;
 
   key_w: number = 0;
   key_a: number = 0;
@@ -188,11 +188,6 @@ export class HomeComponent {
 
   keyUpEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
-    let dir = new THREE.Vector3();
-    this.box?.getWorldDirection(dir);
-    this.sphere?.position.set(dir.x, dir.y, dir.z);
-    // this.sphere.tra
-    console.log(dir);
     switch (e.key) {
       case 'w':
         this.key_w = 0;
