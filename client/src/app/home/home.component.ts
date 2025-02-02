@@ -94,7 +94,7 @@ export class HomeComponent {
     // this.pivot.add(this.camera); // uncomment to attach with it cube..
     // this.scene.add(this.pivot);
 
-    // // now render the scene
+    // now render the scene
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement); // Also can it refered as => which navigate the scene by angular view
 
     // this.orbit.enableDamping = true;
@@ -141,10 +141,10 @@ export class HomeComponent {
       this.box.userData['limit'].min,
       this.box.userData['limit'].max
     );
-    // this.sphere?.position.clamp(
-    //   this.sphere.userData['limit'].min,
-    //   this.sphere.userData['limit'].max
-    // );
+    this.sphere?.position.clamp(
+      this.sphere.userData['limit'].min,
+      this.sphere.userData['limit'].max
+    );
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
@@ -262,20 +262,22 @@ export class HomeComponent {
   pivot: THREE.Object3D = new THREE.Object3D();
 
   createSphere() {
+    let maxHeight = 5; // 0.5
     let SphereGeometry = new THREE.SphereGeometry(0.5);
     let sphereMaterial = new THREE.MeshStandardMaterial({
       color: this.sphereColor,
     });
     this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
-    this.sphere.position.set(0, 0.5, 4);
+    this.sphere.position.set(0, maxHeight, 2);
     this.scene.add(this.sphere);
-    this.objects.push(this.sphere);
 
     this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, 0.5, 24.5),
+      min: new THREE.Vector3(-24.5, maxHeight, -24.5),
+      max: new THREE.Vector3(24.5, maxHeight, 24.5),
     };
+
+    // this.objects.push(this.sphere);
   }
 
   updateCameraPos() {
