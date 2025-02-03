@@ -11,8 +11,10 @@ import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 export class HomeComponent {
   constructor() {}
 
-  isOrbit: boolean = false;
+  isOrbit: boolean = true;
   isKeyOpt: boolean = true;
+  resetState: boolean = true;
+  maxHeight: number = 5;
 
   key_w: number = 0;
   key_a: number = 0;
@@ -39,9 +41,10 @@ export class HomeComponent {
 
   gridHelper = new THREE.GridHelper(50, 50);
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
-  ambientLight = new THREE.AmbientLight(0xffffff, 2);
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   directionalLightHelper = new THREE.DirectionalLightHelper(
-    this.directionalLight
+    this.directionalLight,
+    5
   );
 
   mousePosition = new THREE.Vector2();
@@ -51,11 +54,9 @@ export class HomeComponent {
   objects: THREE.Object3D[] = [];
 
   rayCaster = new THREE.Raycaster();
-
   intersects: any | null = null;
 
   draggable: THREE.Object3D | null = null; // manipulate object in 3d space
-
   dragControl: DragControls | null = null;
 
   ngOnInit() {
@@ -68,18 +69,20 @@ export class HomeComponent {
       this.container?.clientWidth,
       this.container?.clientHeight
     );
+    this.renderer.shadowMap.enabled = true;
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    this.createBox();
+    // this.createBox();
     this.createFloor();
     this.createSphere();
 
+    this.directionalLight.position.set(0, 5, 3);
+    this.directionalLight.castShadow = true;
+
     this.scene.add(axesHelper);
+    this.scene.add(this.ambientLight, this.directionalLight);
     this.scene.add(this.gridHelper);
-    this.directionalLight.position.set(-4, 5, 3);
-    this.directionalLight.lookAt(0, 0, 0);
-    this.scene.add(this.directionalLight, this.ambientLight); //this.directionalLightHelper
 
     this.camera = new THREE.PerspectiveCamera(
       75, // fov, camera angle of view ( that cover )
@@ -88,8 +91,8 @@ export class HomeComponent {
       500 // far clipping plane
     );
 
-    this.camera.position.set(0, 6, 7);
-    this.camera.lookAt(0, 0, 0);
+    this.camera.position.set(11.8, 7.3, 10.3);
+    this.camera.lookAt(1, 1, 1);
 
     // this.pivot.add(this.camera); // uncomment to attach with it cube..
     // this.scene.add(this.pivot);
@@ -124,12 +127,22 @@ export class HomeComponent {
     this.isKeyOpt = checked;
   }
 
-  // count: number = 0;
+  reset() {
+    // this.resetState = !this.resetState;
+    if (this.sphere) this.sphere.position.y = this.maxHeight; // this.maxHeight
+    this.velocity = 0; // 0.01
+  }
+
+  init_velocity: number = 5; // m/s
+  velocity: number = 0; // m/s
+  time: number = 0; // s
+  acceleration: number = -9.81; // m/s^2 || acceleration or gravitational constant (+ acceleration | - deceleration)
+  deltaTime: number = 1 / 60; // time elapsed for 1 frame (1 of 60)
 
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
-    // this.count++;
-    // if (this.count % 60 == 0) console.log(this.count);
+
+    this.moveBall();
 
     if (this.key_w) this.moveUp();
     if (this.key_a) this.rotateLeft();
@@ -146,6 +159,41 @@ export class HomeComponent {
       this.sphere.userData['limit'].max
     );
     if (this.camera) this.renderer.render(this.scene, this.camera);
+  }
+
+  counterHeight: number = 0;
+
+  moveBall() {
+    if (this.sphere) {
+      let displacement =
+        this.init_velocity * this.time +
+        0.5 * this.acceleration * this.time ** 2; // ut + 1/2(at^2)
+      this.sphere.position.y = displacement + this.counterHeight; // add height to balance negative displacement
+
+      this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
+      this.time += this.deltaTime;
+
+      // max reached
+      if (displacement > this.maxHeight) {
+        this.init_velocity = 0;
+        this.acceleration *= -1;
+        this.time = 0;
+        this.counterHeight = this.maxHeight;
+        // reached down
+      } else if (this.sphere.position.y <= 0) {
+        this.init_velocity = 5;
+        this.acceleration *= -1;
+        this.time = 0;
+        this.counterHeight = 0.5;
+        // this.velocity = 0;
+      }
+      console.log(displacement);
+    }
+    // if (this.sphere && this.sphere.position.y > 0.5) {
+    //   this.velocity *= 1.1;
+    //   this.sphere.position.y -= 0.09 * this.velocity;
+    //   console.log(this.sphere.position.y);
+    // }
   }
 
   listenEvent() {
@@ -187,6 +235,9 @@ export class HomeComponent {
         break;
       case 'd':
         this.key_d = 1;
+        break;
+      case ' ':
+        this.moveBall();
         break;
     }
   }
@@ -239,6 +290,7 @@ export class HomeComponent {
     this.planeBox.rotation.x = -Math.PI / 2;
     this.planeBox.position.y = -(depth / 2); // half of depth
 
+    this.planeBox.receiveShadow = true;
     this.scene.add(this.planeBox);
     this.planeBox.userData = { ground: true };
   }
@@ -262,19 +314,20 @@ export class HomeComponent {
   pivot: THREE.Object3D = new THREE.Object3D();
 
   createSphere() {
-    let maxHeight = 5; // 0.5
     let SphereGeometry = new THREE.SphereGeometry(0.5);
     let sphereMaterial = new THREE.MeshStandardMaterial({
       color: this.sphereColor,
     });
     this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
-    this.sphere.position.set(0, maxHeight, 2);
+    this.sphere.position.set(0, 0.5, 2);
+    this.sphere.castShadow = true;
+    this.sphere.receiveShadow = true;
     this.scene.add(this.sphere);
 
     this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, maxHeight, -24.5),
-      max: new THREE.Vector3(24.5, maxHeight, 24.5),
+      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
     };
 
     // this.objects.push(this.sphere);
