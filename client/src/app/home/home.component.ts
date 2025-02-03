@@ -14,6 +14,7 @@ export class HomeComponent {
   isOrbit: boolean = true;
   isKeyOpt: boolean = true;
   resetState: boolean = true;
+  isJump: boolean = false;
   maxHeight: number = 5;
 
   key_w: number = 0;
@@ -130,10 +131,9 @@ export class HomeComponent {
   reset() {
     // this.resetState = !this.resetState;
     if (this.sphere) this.sphere.position.y = this.maxHeight; // this.maxHeight
-    this.velocity = 0; // 0.01
   }
 
-  init_velocity: number = 5; // m/s
+  init_velocity: number = 2; // m/s
   velocity: number = 0; // m/s
   time: number = 0; // s
   acceleration: number = -9.81; // m/s^2 || acceleration or gravitational constant (+ acceleration | - deceleration)
@@ -173,27 +173,22 @@ export class HomeComponent {
       this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
       this.time += this.deltaTime;
 
+      // if (displacement > 0) console.log(this.velocity);
+
       // max reached
-      if (displacement > this.maxHeight) {
+      if (displacement > this.maxHeight + 0.5) {
         this.init_velocity = 0;
         this.acceleration *= -1;
         this.time = 0;
         this.counterHeight = this.maxHeight;
         // reached down
       } else if (this.sphere.position.y <= 0) {
-        this.init_velocity = 5;
+        this.init_velocity = 2;
         this.acceleration *= -1;
         this.time = 0;
         this.counterHeight = 0.5;
-        // this.velocity = 0;
       }
-      console.log(displacement);
     }
-    // if (this.sphere && this.sphere.position.y > 0.5) {
-    //   this.velocity *= 1.1;
-    //   this.sphere.position.y -= 0.09 * this.velocity;
-    //   console.log(this.sphere.position.y);
-    // }
   }
 
   listenEvent() {
