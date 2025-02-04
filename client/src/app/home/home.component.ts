@@ -74,7 +74,7 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    // this.createBox();
+    this.createBox();
     this.createFloor();
     this.createSphere();
 
@@ -92,11 +92,16 @@ export class HomeComponent {
       500 // far clipping plane
     );
 
-    this.camera.position.set(11.8, 7.3, 10.3);
+    this.camera.position.set(0, 4, 6);
     this.camera.lookAt(1, 1, 1);
 
-    // this.pivot.add(this.camera); // uncomment to attach with it cube..
-    // this.scene.add(this.pivot);
+    this.pivot.add(this.camera); // uncomment to attach with it cube..
+    this.scene.add(this.pivot);
+
+    this.pivot.userData['limit'] = {
+      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      max: new THREE.Vector3(24.5, 0.5, 24.5),
+    };
 
     // now render the scene
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement); // Also can it refered as => which navigate the scene by angular view
@@ -159,6 +164,10 @@ export class HomeComponent {
       this.sphere.userData['limit'].min,
       this.sphere.userData['limit'].max
     );
+    this.pivot?.position.clamp(
+      this.pivot.userData['limit'].min,
+      this.pivot.userData['limit'].max
+    );
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
@@ -166,13 +175,11 @@ export class HomeComponent {
   jumpCount: number = 2;
 
   moveBall() {
-    console.log(this.isJump);
-
-    if (this.sphere) {
+    if (this.box) {
       let displacement =
         this.init_velocity * this.time +
         0.5 * this.acceleration * this.time ** 2; // ut + 1/2(at^2)
-      this.sphere.position.y = displacement + this.counterHeight; // add height to balance negative displacement
+      this.box.position.y = displacement + this.counterHeight; // add height to balance negative displacement
 
       this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
       this.time += this.deltaTime; // increase delta time for more gravitational-pull / pull force towards down..
@@ -186,7 +193,7 @@ export class HomeComponent {
         this.counterHeight = this.maxHeight;
         this.jumpCount--;
         // reached down
-      } else if (this.sphere.position.y <= 0) {
+      } else if (this.box.position.y <= 0) {
         this.init_velocity = this.orgInit_velocity;
         // this.time = 0;
         this.counterHeight = 0.5;
@@ -313,7 +320,7 @@ export class HomeComponent {
     this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
     this.box.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, 0.5, 24.5),
+      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
     };
   }
 
@@ -325,7 +332,7 @@ export class HomeComponent {
       color: this.sphereColor,
     });
     this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
-    this.sphere.position.set(0, 0.5, 2);
+    this.sphere.position.set(4, 0.5, 2);
     this.sphere.castShadow = true;
     this.sphere.receiveShadow = true;
     this.scene.add(this.sphere);
