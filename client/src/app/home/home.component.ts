@@ -130,7 +130,7 @@ export class HomeComponent {
 
   reset() {
     // this.resetState = !this.resetState;
-    if (this.sphere) this.sphere.position.y = this.maxHeight; // this.maxHeight
+    this.isJump = true;
   }
 
   orgInit_velocity: number = 8;
@@ -143,7 +143,7 @@ export class HomeComponent {
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
 
-    this.moveBall();
+    if (this.isJump) this.moveBall();
 
     if (this.key_w) this.moveUp();
     if (this.key_a) this.rotateLeft();
@@ -163,8 +163,11 @@ export class HomeComponent {
   }
 
   counterHeight: number = 0;
+  jumpCount: number = 2;
 
   moveBall() {
+    console.log(this.isJump);
+
     if (this.sphere) {
       let displacement =
         this.init_velocity * this.time +
@@ -172,20 +175,29 @@ export class HomeComponent {
       this.sphere.position.y = displacement + this.counterHeight; // add height to balance negative displacement
 
       this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
-      this.time += this.deltaTime;
+      this.time += this.deltaTime; // increase delta time for more gravitational-pull / pull force towards down..
 
-      console.log(this.time);
+      // console.log(this.time);
 
       // max reached
       if (displacement > this.maxHeight + 0.5) {
         this.init_velocity = 0;
         // this.time = 0; // no need anymore.. ig
         this.counterHeight = this.maxHeight;
+        this.jumpCount--;
         // reached down
       } else if (this.sphere.position.y <= 0) {
         this.init_velocity = this.orgInit_velocity;
         // this.time = 0;
         this.counterHeight = 0.5;
+        this.jumpCount--;
+        if (!this.jumpCount) {
+          // reset
+          this.velocity = 0;
+          this.time = 0;
+          this.jumpCount = 2;
+          this.isJump = false;
+        }
       }
     }
   }
@@ -231,7 +243,7 @@ export class HomeComponent {
         this.key_d = 1;
         break;
       case ' ':
-        this.moveBall();
+        this.isJump = true;
         break;
     }
   }
