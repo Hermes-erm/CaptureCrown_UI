@@ -174,17 +174,17 @@ export class HomeComponent {
       this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
       this.time += this.deltaTime;
 
-      // console.log(this.velocity, displacement);
+      console.log(this.time);
 
       // max reached
       if (displacement > this.maxHeight + 0.5) {
         this.init_velocity = 0;
-        this.time = 0;
+        // this.time = 0; // no need anymore.. ig
         this.counterHeight = this.maxHeight;
         // reached down
       } else if (this.sphere.position.y <= 0) {
         this.init_velocity = this.orgInit_velocity;
-        this.time = 0;
+        // this.time = 0;
         this.counterHeight = 0.5;
       }
     }
