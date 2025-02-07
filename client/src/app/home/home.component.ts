@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 @Component({
   selector: 'app-home',
@@ -30,7 +31,7 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: number = 0xffffff; //  or THREE.ColorRepresentation (type)
+  planeColor: number = 0xb3b3b3; //  or THREE.ColorRepresentation (type)
   boxColor: number = 0x3256a8;
   sphereColor: number = 0x32a852;
 
@@ -60,6 +61,8 @@ export class HomeComponent {
   draggable: THREE.Object3D | null = null; // manipulate object in 3d space
   dragControl: DragControls | null = null;
 
+  loader: GLTFLoader = new GLTFLoader();
+
   ngOnInit() {
     this.container = document.getElementById('playground'); // element where we gonna put renderer
     if (!this.container) return;
@@ -74,7 +77,7 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    this.createBox();
+    // this.createBox();
     this.createFloor();
     this.createSphere();
 
@@ -95,8 +98,8 @@ export class HomeComponent {
     this.camera.position.set(0, 4, 6);
     this.camera.lookAt(1, 1, 1);
 
-    this.pivot.add(this.camera); // uncomment to attach with it cube..
-    this.scene.add(this.pivot);
+    // this.pivot.add(this.camera); // uncomment to attach with it cube..
+    // this.scene.add(this.pivot);
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
@@ -120,6 +123,10 @@ export class HomeComponent {
       this.camera,
       this.renderer.domElement
     );
+
+    // this.loader.load('', (gltfObject) => {
+    //   console.log(typeof gltfObject);
+    // });
 
     this.animate();
     this.listenEvent();
