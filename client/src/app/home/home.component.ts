@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 @Component({
   selector: 'app-home',
@@ -31,7 +32,7 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: number = 0xb3b3b3; //  or THREE.ColorRepresentation (type)
+  planeColor: number = 0xcfcfcf; //  or THREE.ColorRepresentation (type)
   boxColor: number = 0x3256a8;
   sphereColor: number = 0x32a852;
 
@@ -43,7 +44,7 @@ export class HomeComponent {
 
   gridHelper = new THREE.GridHelper(50, 50);
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
-  ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
   directionalLightHelper = new THREE.DirectionalLightHelper(
     this.directionalLight,
     5
@@ -124,9 +125,12 @@ export class HomeComponent {
       this.renderer.domElement
     );
 
-    // this.loader.load('', (gltfObject) => {
-    //   console.log(typeof gltfObject);
-    // });
+    let btP = new THREE.Object3D();
+    this.loader.load('samp.glb', (gltfObject: GLTF) => {
+      // console.log(gltfObject.scene);
+      btP = gltfObject.scene;
+      this.scene.add(btP);
+    });
 
     this.animate();
     this.listenEvent();
