@@ -41,6 +41,7 @@ export class HomeComponent {
   box: THREE.Mesh | null = null;
   sphere: THREE.Mesh | null = null;
   planeBox: THREE.Mesh | null = null;
+  btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
   gridHelper = new THREE.GridHelper(50, 50);
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
@@ -78,9 +79,10 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    // this.createBox();
+    this.createBox();
     this.createFloor();
     this.createSphere();
+    // this.addBTP();
 
     this.directionalLight.position.set(0, 5, 3);
     this.directionalLight.castShadow = true;
@@ -125,13 +127,6 @@ export class HomeComponent {
       this.renderer.domElement
     );
 
-    let btP = new THREE.Object3D();
-    this.loader.load('samp.glb', (gltfObject: GLTF) => {
-      // console.log(gltfObject.scene);
-      btP = gltfObject.scene;
-      this.scene.add(btP);
-    });
-
     this.animate();
     this.listenEvent();
   }
@@ -170,6 +165,10 @@ export class HomeComponent {
     this.box?.position.clamp(
       this.box.userData['limit'].min,
       this.box.userData['limit'].max
+    );
+    this.sphere?.position.clamp(
+      this.sphere.userData['limit'].min,
+      this.sphere.userData['limit'].max
     );
     this.sphere?.position.clamp(
       this.sphere.userData['limit'].min,
@@ -286,20 +285,24 @@ export class HomeComponent {
 
   moveUp() {
     if (this.box) this.box.translateZ(-this.moveDistance); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
+    // if (this.btP) this.btP.translateX(-this.moveDistance);
   }
 
   moveDown() {
     if (this.box) this.box.translateZ(this.moveDistance);
+    // if (this.btP) this.btP.translateX(this.moveDistance);
   }
 
   rotateLeft() {
     let rad = this.rotationDegree * (Math.PI / 180);
     if (this.box) this.box.rotateY(rad); //position.x -= 0.5;
+    // if (this.btP) this.btP.rotateY(rad);
   }
 
   rotateRight() {
     let rad = this.rotationDegree * (Math.PI / 180);
     if (this.box) this.box.rotateY(-rad); //position.x += 0.5;
+    // if (this.btP) this.btP.rotateY(-rad);
   }
 
   createFloor() {
@@ -355,6 +358,18 @@ export class HomeComponent {
     };
 
     // this.objects.push(this.sphere);
+  }
+
+  addBTP() {
+    this.loader.load('samp.glb', (gltfObject: GLTF) => {
+      this.btP = gltfObject.scene;
+      this.btP.rotateY(-Math.PI / 2);
+      this.scene.add(this.btP);
+    });
+    this.btP.userData['limit'] = {
+      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
+    };
   }
 
   updateCameraPos() {
