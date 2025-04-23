@@ -41,6 +41,7 @@ export class Player {
     this.player = new THREE.Mesh(this.playerGeometry, playerMaterial);
 
     this.player.position.set(initPos.x, initPos.y, initPos.z); // initiate position
+    this.player.userData['type'] = 'nativePlayer';
     this.player.userData['limit'] = {
       min: new THREE.Vector3(-this.edgeLimit, this.baseLimit, -this.edgeLimit),
       max: new THREE.Vector3(this.edgeLimit, this.maxTopLimit, this.edgeLimit),

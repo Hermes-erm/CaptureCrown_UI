@@ -38,7 +38,7 @@ export class HomeComponent {
 
   orbit: OrbitControls | null = null;
 
-  player: Player = new Player('blue', new THREE.Vector3(0, 0.5, 0));
+  player: Player = new Player('#34abeb', new THREE.Vector3(0, 0.5, 0));
   playerObject: THREE.Mesh = this.player.player;
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
@@ -53,7 +53,8 @@ export class HomeComponent {
 
   vec = new THREE.Vector3();
 
-  draggable: THREE.Object3D | null = null; // manipulate object in 3d space
+  // draggable: THREE.Object3D | null = null; // manipulate object in 3d space
+  objects: THREE.Object3D[] = [];
 
   loader: GLTFLoader = new GLTFLoader();
 
@@ -71,11 +72,10 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    // this.createBox();
     // this.createSphere();
     // this.addBTP();
 
-    let plane = new Plane(new THREE.Vector2(50, 50), 0.2);
+    let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
     this.scene.add(plane.plane, this.playerObject);
 
     this.directionalLight.position.set(0, 5, 3);
@@ -95,8 +95,8 @@ export class HomeComponent {
     this.camera.position.set(0, 4, 6);
     this.camera.lookAt(1, 1, 1);
 
-    // this.pivot.add(this.camera); // uncomment to attach with it cube..
-    // this.scene.add(this.pivot);
+    this.pivot.add(this.camera); // uncomment to attach with it cube..
+    this.scene.add(this.pivot);
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
@@ -112,8 +112,7 @@ export class HomeComponent {
     this.orbit.zoomSpeed = 1;
     this.orbit.enablePan = true;
     this.orbit.enableRotate = this.isOrbit; // true to enable orbiting..
-
-    // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
+    this.objects.push(this.playerObject, this.pivot);
 
     this.animate();
     this.listenEvent();
@@ -128,16 +127,13 @@ export class HomeComponent {
   }
 
   reset() {
-    // this.resetState = !this.resetState;
-    this.player.isJump = true;
+    this.playerObject.position.set(0, 0.5, 0);
+    this.playerObject.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
   }
 
-  orgInit_velocity: number = 8;
-  init_velocity: number = this.orgInit_velocity; // m/s
-  velocity: number = 0; // m/s
-  time: number = 0; // s
-  acceleration: number = -9.81; // m/s^2 || acceleration or gravitational constant (+ acceleration | - deceleration)
-  deltaTime: number = 1 / 30; // time elapsed for 1 frame (1 of 60)
+  toggleView() {
+    // this.camera?.position.set(1, 2, 0);
+  }
 
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
@@ -150,22 +146,12 @@ export class HomeComponent {
     if (this.key_s) this.player.moveDown();
     this.updateCameraPos();
 
-    this.playerObject.position.clamp(
-      this.playerObject.userData['limit'].min,
-      this.playerObject.userData['limit'].max
-    );
-    this.sphere?.position.clamp(
-      this.sphere.userData['limit'].min,
-      this.sphere.userData['limit'].max
-    );
-    this.sphere?.position.clamp(
-      this.sphere.userData['limit'].min,
-      this.sphere.userData['limit'].max
-    );
-    this.pivot?.position.clamp(
-      this.pivot.userData['limit'].min,
-      this.pivot.userData['limit'].max
-    );
+    this.objects.forEach((object3d: THREE.Object3D) => {
+      object3d.position.clamp(
+        object3d.userData['limit'].min,
+        object3d.userData['limit'].max
+      );
+    });
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
@@ -216,43 +202,6 @@ export class HomeComponent {
     }
   }
 
-  // moveUp() {
-  //   if (this.box) this.box.translateZ(-this.moveDistance); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
-  //   // if (this.btP) this.btP.translateX(-this.moveDistance);
-  // }
-
-  // moveDown() {
-  //   if (this.box) this.box.translateZ(this.moveDistance);
-  //   // if (this.btP) this.btP.translateX(this.moveDistance);
-  // }
-
-  // rotateLeft() {
-  //   let rad = this.rotationDegree * (Math.PI / 180);
-  //   if (this.box) this.box.rotateY(rad); //position.x -= 0.5;
-  //   // if (this.btP) this.btP.rotateY(rad);
-  // }
-
-  // rotateRight() {
-  //   let rad = this.rotationDegree * (Math.PI / 180);
-  //   if (this.box) this.box.rotateY(-rad); //position.x += 0.5;
-  //   // if (this.btP) this.btP.rotateY(-rad);
-  // }
-
-  // createBox() {
-  //   let boxGeometry = new THREE.BoxGeometry();
-  //   let boxMaterial = new THREE.MeshStandardMaterial({ color: this.boxColor });
-  //   this.box = new THREE.Mesh(boxGeometry, boxMaterial);
-  //   // this.box.geometry.translate(0, 0.5, 0); // to translate the pivot ( origin point ) of the geometry (this box)..
-  //   this.box.position.set(0, 0.5, 0);
-  //   this.scene.add(this.box);
-
-  //   this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
-  //   this.box.userData['limit'] = {
-  //     min: new THREE.Vector3(-24.5, 0.5, -24.5),
-  //     max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
-  //   };
-  // }
-
   pivot: THREE.Object3D = new THREE.Object3D();
 
   createSphere() {
@@ -266,7 +215,7 @@ export class HomeComponent {
     this.sphere.receiveShadow = true;
     this.scene.add(this.sphere);
 
-    this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
+    // this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
       max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
@@ -294,3 +243,5 @@ export class HomeComponent {
     this.pivot.rotation.copy(euler);
   }
 }
+
+// this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera

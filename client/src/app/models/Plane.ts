@@ -9,12 +9,14 @@ export class Plane {
 
   planeDepth: number;
 
-  planeColor: string = 'white';
+  planeColor: string;
   constructor(
     @Inject('dimension') dimension: THREE.Vector2,
-    @Inject('depth') depth: number
+    @Inject('depth') depth: number,
+    @Inject('color') color: string
   ) {
     this.planeDepth = depth;
+    this.planeColor = color;
     this.planeGeometry = new THREE.BoxGeometry(dimension.x, dimension.y, depth);
     this.planeMaterial = new THREE.MeshStandardMaterial({
       color: this.planeColor,
