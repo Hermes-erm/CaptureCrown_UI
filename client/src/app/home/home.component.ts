@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { Player } from '../models/Player';
+import { Plane } from '../models/Plane';
 
 @Component({
   selector: 'app-home',
@@ -11,8 +13,6 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-  constructor() {}
-
   isOrbit: boolean = true;
   isKeyOpt: boolean = true;
   resetState: boolean = true;
@@ -38,9 +38,9 @@ export class HomeComponent {
 
   orbit: OrbitControls | null = null;
 
-  box: THREE.Mesh | null = null;
+  player: Player = new Player('blue', new THREE.Vector3(0, 0.5, 0));
+  playerObject: THREE.Mesh = this.player.player;
   sphere: THREE.Mesh | null = null;
-  planeBox: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
   gridHelper = new THREE.GridHelper(50, 50);
@@ -51,17 +51,9 @@ export class HomeComponent {
     5
   );
 
-  mousePosition = new THREE.Vector2();
-  mouseMove = new THREE.Vector2();
   vec = new THREE.Vector3();
 
-  objects: THREE.Object3D[] = [];
-
-  rayCaster = new THREE.Raycaster();
-  intersects: any | null = null;
-
   draggable: THREE.Object3D | null = null; // manipulate object in 3d space
-  dragControl: DragControls | null = null;
 
   loader: GLTFLoader = new GLTFLoader();
 
@@ -79,10 +71,12 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
 
-    this.createBox();
-    this.createFloor();
-    this.createSphere();
+    // this.createBox();
+    // this.createSphere();
     // this.addBTP();
+
+    let plane = new Plane(new THREE.Vector2(50, 50), 0.2);
+    this.scene.add(plane.plane, this.playerObject);
 
     this.directionalLight.position.set(0, 5, 3);
     this.directionalLight.castShadow = true;
@@ -121,12 +115,6 @@ export class HomeComponent {
 
     // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
 
-    this.dragControl = new DragControls(
-      this.objects,
-      this.camera,
-      this.renderer.domElement
-    );
-
     this.animate();
     this.listenEvent();
   }
@@ -141,7 +129,7 @@ export class HomeComponent {
 
   reset() {
     // this.resetState = !this.resetState;
-    this.isJump = true;
+    this.player.isJump = true;
   }
 
   orgInit_velocity: number = 8;
@@ -154,17 +142,17 @@ export class HomeComponent {
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
 
-    if (this.isJump) this.moveBall();
+    if (this.player.isJump) this.player.jump();
 
-    if (this.key_w) this.moveUp();
-    if (this.key_a) this.rotateLeft();
-    if (this.key_d) this.rotateRight();
-    if (this.key_s) this.moveDown();
+    if (this.key_w) this.player.moveUp();
+    if (this.key_a) this.player.rotateLeft();
+    if (this.key_d) this.player.rotateRight();
+    if (this.key_s) this.player.moveDown();
     this.updateCameraPos();
 
-    this.box?.position.clamp(
-      this.box.userData['limit'].min,
-      this.box.userData['limit'].max
+    this.playerObject.position.clamp(
+      this.playerObject.userData['limit'].min,
+      this.playerObject.userData['limit'].max
     );
     this.sphere?.position.clamp(
       this.sphere.userData['limit'].min,
@@ -184,64 +172,9 @@ export class HomeComponent {
   counterHeight: number = 0;
   jumpCount: number = 2;
 
-  moveBall() {
-    if (this.box) {
-      let displacement =
-        this.init_velocity * this.time +
-        0.5 * this.acceleration * this.time ** 2; // ut + 1/2(at^2)
-      this.box.position.y = displacement + this.counterHeight; // add height to balance negative displacement
-
-      this.velocity = this.init_velocity + this.acceleration * this.time; // u + at
-      this.time += this.deltaTime; // increase delta time for more gravitational-pull / pull force towards down..
-
-      // console.log(this.time);
-
-      // max reached
-      if (displacement > this.maxHeight + 0.5) {
-        this.init_velocity = 0;
-        // this.time = 0; // no need anymore.. ig
-        this.counterHeight = this.maxHeight;
-        this.jumpCount--;
-        // reached down
-      } else if (this.box.position.y <= 0) {
-        this.init_velocity = this.orgInit_velocity;
-        // this.time = 0;
-        this.counterHeight = 0.5;
-        this.jumpCount--;
-        if (!this.jumpCount) {
-          // reset
-          this.velocity = 0;
-          this.time = 0;
-          this.jumpCount = 2;
-          this.isJump = false;
-        }
-      }
-    }
-  }
-
   listenEvent() {
-    if (!this.dragControl) return;
-    this.dragControl.addEventListener('drag', this.dragEvent);
-
-    this.dragControl.addEventListener('dragstart', this.dragStartEvent);
-
-    this.dragControl.addEventListener('dragend', (e) => {
-      if (e.object instanceof THREE.Mesh)
-        e.object.material.color.set(this.boxColor);
-    });
-
     window.addEventListener('keydown', this.keydownEvent.bind(this)); // bind current class or local to the listener function, else it takes the "this" ( window instance ) in default
     window.addEventListener('keyup', this.keyUpEvent.bind(this));
-  }
-
-  dragEvent(e: any) {
-    if (!this.orbit) return;
-    e.object.position.y = 0.5;
-  }
-
-  dragStartEvent(e: any) {
-    // ensure or check the type whether it's a mesh (geometry + material)..
-    if (e.object instanceof THREE.Mesh) e.object.material.color.set(0xff0000);
   }
 
   keydownEvent(e: KeyboardEvent) {
@@ -260,7 +193,7 @@ export class HomeComponent {
         this.key_d = 1;
         break;
       case ' ':
-        this.isJump = true;
+        this.player.isJump = true;
         break;
     }
   }
@@ -283,60 +216,42 @@ export class HomeComponent {
     }
   }
 
-  moveUp() {
-    if (this.box) this.box.translateZ(-this.moveDistance); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
-    // if (this.btP) this.btP.translateX(-this.moveDistance);
-  }
+  // moveUp() {
+  //   if (this.box) this.box.translateZ(-this.moveDistance); // translate object, which moves the object along it's *local* z-axis instead of it's global position, || position.z -= 0.5 => global positioning the object
+  //   // if (this.btP) this.btP.translateX(-this.moveDistance);
+  // }
 
-  moveDown() {
-    if (this.box) this.box.translateZ(this.moveDistance);
-    // if (this.btP) this.btP.translateX(this.moveDistance);
-  }
+  // moveDown() {
+  //   if (this.box) this.box.translateZ(this.moveDistance);
+  //   // if (this.btP) this.btP.translateX(this.moveDistance);
+  // }
 
-  rotateLeft() {
-    let rad = this.rotationDegree * (Math.PI / 180);
-    if (this.box) this.box.rotateY(rad); //position.x -= 0.5;
-    // if (this.btP) this.btP.rotateY(rad);
-  }
+  // rotateLeft() {
+  //   let rad = this.rotationDegree * (Math.PI / 180);
+  //   if (this.box) this.box.rotateY(rad); //position.x -= 0.5;
+  //   // if (this.btP) this.btP.rotateY(rad);
+  // }
 
-  rotateRight() {
-    let rad = this.rotationDegree * (Math.PI / 180);
-    if (this.box) this.box.rotateY(-rad); //position.x += 0.5;
-    // if (this.btP) this.btP.rotateY(-rad);
-  }
+  // rotateRight() {
+  //   let rad = this.rotationDegree * (Math.PI / 180);
+  //   if (this.box) this.box.rotateY(-rad); //position.x += 0.5;
+  //   // if (this.btP) this.btP.rotateY(-rad);
+  // }
 
-  createFloor() {
-    let depth = 0.2;
-    let planeBoxGeometry = new THREE.BoxGeometry(50, 50, depth);
-    let planeBoxMaterial = new THREE.MeshStandardMaterial({
-      color: this.planeColor,
-      side: THREE.DoubleSide,
-    });
-    this.planeBox = new THREE.Mesh(planeBoxGeometry, planeBoxMaterial);
+  // createBox() {
+  //   let boxGeometry = new THREE.BoxGeometry();
+  //   let boxMaterial = new THREE.MeshStandardMaterial({ color: this.boxColor });
+  //   this.box = new THREE.Mesh(boxGeometry, boxMaterial);
+  //   // this.box.geometry.translate(0, 0.5, 0); // to translate the pivot ( origin point ) of the geometry (this box)..
+  //   this.box.position.set(0, 0.5, 0);
+  //   this.scene.add(this.box);
 
-    this.planeBox.rotation.x = -Math.PI / 2;
-    this.planeBox.position.y = -(depth / 2); // half of depth
-
-    this.planeBox.receiveShadow = true;
-    this.scene.add(this.planeBox);
-    this.planeBox.userData = { ground: true };
-  }
-
-  createBox() {
-    let boxGeometry = new THREE.BoxGeometry();
-    let boxMaterial = new THREE.MeshStandardMaterial({ color: this.boxColor });
-    this.box = new THREE.Mesh(boxGeometry, boxMaterial);
-    // this.box.geometry.translate(0, 0.5, 0); // to translate the pivot ( origin point ) of the geometry..
-    this.box.position.set(0, 0.5, 0);
-    this.scene.add(this.box);
-    this.objects.push(this.box);
-
-    this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
-    this.box.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
-    };
-  }
+  //   this.box.userData = { draggable: false, name: 'BOX' }; // or this.box.userData['draggable'] = true;
+  //   this.box.userData['limit'] = {
+  //     min: new THREE.Vector3(-24.5, 0.5, -24.5),
+  //     max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
+  //   };
+  // }
 
   pivot: THREE.Object3D = new THREE.Object3D();
 
@@ -356,8 +271,6 @@ export class HomeComponent {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
       max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
     };
-
-    // this.objects.push(this.sphere);
   }
 
   addBTP() {
@@ -373,11 +286,11 @@ export class HomeComponent {
   }
 
   updateCameraPos() {
-    this.box?.getWorldPosition(this.vec);
+    this.playerObject.getWorldPosition(this.vec);
     this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
 
     let euler = new THREE.Euler();
-    euler = this.box?.rotation.clone() || euler; // clone and copy the orientation / rotation of box in to pivot
+    euler = this.playerObject.rotation.clone() || euler; // clone and copy the orientation / rotation of box in to pivot
     this.pivot.rotation.copy(euler);
   }
 }
