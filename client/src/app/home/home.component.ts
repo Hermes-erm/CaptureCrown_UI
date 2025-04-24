@@ -25,9 +25,6 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  moveDistance: number = 0.1;
-  rotationDegree: number = 2;
-
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
   scene = new THREE.Scene();
@@ -99,7 +96,9 @@ export class HomeComponent {
 
     let view = this.view[this.viewId];
     this.camera.position.set(view.x, view.y, view.z);
-    // this.camera.lookAt(1, 1, 1);
+
+    this.playerObject.getWorldPosition(this.vec);
+    this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
     this.pivot.add(this.camera); // uncomment to attach with it cube..
     this.scene.add(this.pivot);
@@ -114,7 +113,7 @@ export class HomeComponent {
 
     // this.orbit.enableDamping = true;
 
-    this.orbit.enableZoom = true;
+    this.orbit.enableZoom = false;
     this.orbit.zoomSpeed = 1;
     this.orbit.enablePan = true;
     this.orbit.enableRotate = this.isOrbit; // true to enable orbiting..
@@ -250,6 +249,8 @@ export class HomeComponent {
   updateCameraPos() {
     this.playerObject.getWorldPosition(this.vec);
     this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
+
+    this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
     let euler = new THREE.Euler();
     euler = this.playerObject.rotation.clone() || euler; // clone and copy the orientation / rotation of box in to pivot
