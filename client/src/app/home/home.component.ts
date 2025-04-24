@@ -29,14 +29,14 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: number = 0xcfcfcf; //  or THREE.ColorRepresentation (type)
-  boxColor: number = 0x3256a8;
+  planeColor: number = 0xcfcfcf;
   sphereColor: number = 0x32a852;
 
   orbit: OrbitControls | null = null;
 
   player: Player = new Player('#34abeb', new THREE.Vector3(0, 0, 0));
   playerObject: THREE.Object3D = this.player.player;
+
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
@@ -69,22 +69,25 @@ export class HomeComponent {
 
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(
-      this.container?.clientWidth,
-      this.container?.clientHeight
+      this.container.clientWidth,
+      this.container.clientHeight
     );
     this.renderer.shadowMap.enabled = true;
 
     let axesHelper = new THREE.AxesHelper(5);
 
     let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
-    this.scene.add(plane.plane); //this.playerObject
 
     this.directionalLight.position.set(0, 5, 3);
     this.directionalLight.castShadow = true;
 
-    this.scene.add(axesHelper);
-    this.scene.add(this.ambientLight, this.directionalLight);
-    this.scene.add(this.gridHelper);
+    this.scene.add(
+      plane.plane,
+      axesHelper,
+      this.ambientLight,
+      this.directionalLight,
+      this.gridHelper
+    );
 
     this.camera = new THREE.PerspectiveCamera(
       75, // fov, camera angle of view ( that cover )
@@ -99,12 +102,11 @@ export class HomeComponent {
     this.playerObject.getWorldPosition(this.vec);
     this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
-    this.scene.add(this.playerObject);
     this.pivot.add(this.camera); // uncomment to attach with it cube..
-    this.scene.add(this.pivot);
+    this.scene.add(this.pivot, this.playerObject);
 
     this.pivot.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0.5, -24.5),
+      min: new THREE.Vector3(-24.5, 0, -24.5),
       max: new THREE.Vector3(24.5, 5, 24.5), // udjust to 0.5 to limit max height
     };
 
@@ -153,7 +155,7 @@ export class HomeComponent {
     if (this.key_a) this.player.rotateLeft();
     if (this.key_d) this.player.rotateRight();
     if (this.key_s) this.player.moveDown();
-    // this.updateCameraPos();
+    this.updateCameraPos();
 
     this.objects.forEach((object3d: THREE.Object3D) => {
       object3d.position.clamp(
@@ -234,18 +236,6 @@ export class HomeComponent {
     };
   }
 
-  addBTP() {
-    this.loader.load('samp.glb', (gltfObject: GLTF) => {
-      this.btP = gltfObject.scene;
-      this.btP.rotateY(-Math.PI / 2);
-      this.scene.add(this.btP);
-    });
-    this.btP.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
-    };
-  }
-
   updateCameraPos() {
     this.playerObject.getWorldPosition(this.vec);
     this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
@@ -261,3 +251,14 @@ export class HomeComponent {
 // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
 // this.createSphere();
 // this.addBTP();
+// addBTP() {
+//   this.loader.load('samp.glb', (gltfObject: GLTF) => {
+//     this.btP = gltfObject.scene;
+//     this.btP.rotateY(-Math.PI / 2);
+//     this.scene.add(this.btP);
+//   });
+//   this.btP.userData['limit'] = {
+//     min: new THREE.Vector3(-24.5, 0.5, -24.5),
+//     max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
+//   };
+// }
