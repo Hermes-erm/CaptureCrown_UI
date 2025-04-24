@@ -14,7 +14,7 @@ import { ivec2 } from 'three/src/nodes/TSL.js';
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-  isOrbit: boolean = false;
+  isOrbit: boolean = true;
   isKeyOpt: boolean = true;
   resetState: boolean = true;
   isJump: boolean = false;
@@ -78,7 +78,7 @@ export class HomeComponent {
     let axesHelper = new THREE.AxesHelper(5);
 
     let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
-    this.scene.add(plane.plane, this.playerObject);
+    this.scene.add(plane.plane); //this.playerObject
 
     this.directionalLight.position.set(0, 5, 3);
     this.directionalLight.castShadow = true;
@@ -100,8 +100,10 @@ export class HomeComponent {
     this.playerObject.getWorldPosition(this.vec);
     this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
-    this.pivot.add(this.camera); // uncomment to attach with it cube..
-    this.scene.add(this.pivot);
+    // this.pivot.add(this.camera); // uncomment to attach with it cube..
+    // this.scene.add(this.pivot);
+
+    this.addModel();
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
@@ -113,7 +115,7 @@ export class HomeComponent {
 
     // this.orbit.enableDamping = true;
 
-    this.orbit.enableZoom = false;
+    this.orbit.enableZoom = true;
     this.orbit.zoomSpeed = 1;
     this.orbit.enablePan = true;
     this.orbit.enableRotate = this.isOrbit; // true to enable orbiting..
@@ -153,7 +155,7 @@ export class HomeComponent {
     if (this.key_a) this.player.rotateLeft();
     if (this.key_d) this.player.rotateRight();
     if (this.key_s) this.player.moveDown();
-    this.updateCameraPos();
+    // this.updateCameraPos();
 
     this.objects.forEach((object3d: THREE.Object3D) => {
       object3d.position.clamp(
@@ -244,6 +246,30 @@ export class HomeComponent {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
       max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
     };
+  }
+
+  model: THREE.Object3D = new THREE.Object3D();
+
+  addModel() {
+    this.scene.add(this.model);
+    let SphereGeometry = new THREE.SphereGeometry(0.3);
+    let material = new THREE.MeshStandardMaterial({
+      color: this.sphereColor,
+    });
+    let sphere = new THREE.Mesh(SphereGeometry, material);
+
+    let cylinder = new THREE.CylinderGeometry(0.3, 0.3, 0.7, 32);
+    let cyl = new THREE.Mesh(cylinder, material);
+    cyl.position.set(0, 0.5, 0);
+    sphere.position.set(0, 1, 0);
+
+    this.model.add(sphere, cyl);
+
+    // this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
+    // this.sphere.position.set(4, 0.5, 2);
+    // this.sphere.castShadow = true;
+    // this.sphere.receiveShadow = true;
+    // this.scene.add(this.sphere);
   }
 
   updateCameraPos() {
