@@ -6,6 +6,7 @@ import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Player } from '../models/Player';
 import { Plane } from '../models/Plane';
+import { ivec2 } from 'three/src/nodes/TSL.js';
 
 @Component({
   selector: 'app-home',
@@ -13,7 +14,7 @@ import { Plane } from '../models/Plane';
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-  isOrbit: boolean = true;
+  isOrbit: boolean = false;
   isKeyOpt: boolean = true;
   resetState: boolean = true;
   isJump: boolean = false;
@@ -58,6 +59,13 @@ export class HomeComponent {
 
   loader: GLTFLoader = new GLTFLoader();
 
+  viewId: number = 1;
+  view: THREE.Vector3[] = [
+    new THREE.Vector3(0, 1, 2), // fpv
+    new THREE.Vector3(0, 1.2, 3), // spv
+    new THREE.Vector3(0, 3, 5), // tpv
+  ];
+
   ngOnInit() {
     this.container = document.getElementById('playground'); // element where we gonna put renderer
     if (!this.container) return;
@@ -70,10 +78,7 @@ export class HomeComponent {
     );
     this.renderer.shadowMap.enabled = true;
 
-    let axesHelper = new THREE.AxesHelper(5); // just to guide us with axes
-
-    // this.createSphere();
-    // this.addBTP();
+    let axesHelper = new THREE.AxesHelper(5);
 
     let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
     this.scene.add(plane.plane, this.playerObject);
@@ -92,15 +97,16 @@ export class HomeComponent {
       500 // far clipping plane
     );
 
-    this.camera.position.set(0, 4, 6);
-    this.camera.lookAt(1, 1, 1);
+    let view = this.view[this.viewId];
+    this.camera.position.set(view.x, view.y, view.z);
+    // this.camera.lookAt(1, 1, 1);
 
     this.pivot.add(this.camera); // uncomment to attach with it cube..
     this.scene.add(this.pivot);
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, 0.5, 24.5),
+      max: new THREE.Vector3(24.5, 5, 24.5), // udjust to 0.5 to limit max height
     };
 
     // now render the scene
@@ -132,7 +138,11 @@ export class HomeComponent {
   }
 
   toggleView() {
-    // this.camera?.position.set(1, 2, 0);
+    this.viewId++;
+    if (this.viewId > 2) this.viewId = 0;
+    const personView = this.view[this.viewId];
+
+    this.camera?.position.set(personView.x, personView.y, personView.z);
   }
 
   animate() {
@@ -165,7 +175,7 @@ export class HomeComponent {
 
   keydownEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
-    switch (e.key) {
+    switch (e.key.toLowerCase()) {
       case 'w':
         this.key_w = 1;
         break;
@@ -178,6 +188,9 @@ export class HomeComponent {
       case 'd':
         this.key_d = 1;
         break;
+      case 'v':
+        this.toggleView();
+        break;
       case ' ':
         this.player.isJump = true;
         break;
@@ -186,7 +199,7 @@ export class HomeComponent {
 
   keyUpEvent(e: KeyboardEvent) {
     if (!this.isKeyOpt) return;
-    switch (e.key) {
+    switch (e.key.toLowerCase()) {
       case 'w':
         this.key_w = 0;
         break;
@@ -245,3 +258,5 @@ export class HomeComponent {
 }
 
 // this.renderer.render(this.scene, this.camera); // only next to orbit control, cz then we can also access orbit in the scene and via camera
+// this.createSphere();
+// this.addBTP();
