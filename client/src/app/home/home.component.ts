@@ -6,7 +6,6 @@ import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Player } from '../models/Player';
 import { Plane } from '../models/Plane';
-import { ivec2 } from 'three/src/nodes/TSL.js';
 
 @Component({
   selector: 'app-home',
@@ -36,8 +35,8 @@ export class HomeComponent {
 
   orbit: OrbitControls | null = null;
 
-  player: Player = new Player('#34abeb', new THREE.Vector3(0, 0.5, 0));
-  playerObject: THREE.Mesh = this.player.player;
+  player: Player = new Player('#34abeb', new THREE.Vector3(0, 0, 0));
+  playerObject: THREE.Object3D = this.player.player;
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
@@ -100,10 +99,9 @@ export class HomeComponent {
     this.playerObject.getWorldPosition(this.vec);
     this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
-    // this.pivot.add(this.camera); // uncomment to attach with it cube..
-    // this.scene.add(this.pivot);
-
-    this.addModel();
+    this.scene.add(this.playerObject);
+    this.pivot.add(this.camera); // uncomment to attach with it cube..
+    this.scene.add(this.pivot);
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
@@ -246,30 +244,6 @@ export class HomeComponent {
       min: new THREE.Vector3(-24.5, 0.5, -24.5),
       max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
     };
-  }
-
-  model: THREE.Object3D = new THREE.Object3D();
-
-  addModel() {
-    this.scene.add(this.model);
-    let SphereGeometry = new THREE.SphereGeometry(0.3);
-    let material = new THREE.MeshStandardMaterial({
-      color: this.sphereColor,
-    });
-    let sphere = new THREE.Mesh(SphereGeometry, material);
-
-    let cylinder = new THREE.CylinderGeometry(0.3, 0.3, 0.7, 32);
-    let cyl = new THREE.Mesh(cylinder, material);
-    cyl.position.set(0, 0.5, 0);
-    sphere.position.set(0, 1, 0);
-
-    this.model.add(sphere, cyl);
-
-    // this.sphere = new THREE.Mesh(SphereGeometry, sphereMaterial);
-    // this.sphere.position.set(4, 0.5, 2);
-    // this.sphere.castShadow = true;
-    // this.sphere.receiveShadow = true;
-    // this.scene.add(this.sphere);
   }
 
   updateCameraPos() {

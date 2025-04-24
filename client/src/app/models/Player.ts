@@ -7,12 +7,14 @@ import { Component, Inject } from '@angular/core';
 @Component({ template: '' })
 export class Player {
   playerColor: string = 'black';
-  playerGeometry: THREE.BoxGeometry;
-  player: THREE.Mesh;
+  player: THREE.Object3D = new THREE.Object3D();
 
-  edgeLimit: number = 24.5;
-  baseLimit: number = 0.5;
+  headRadius: number = 2;
+  bodyHeight: number = 8;
+
+  baseLimit: number = 0;
   maxTopLimit: number = 5;
+  edgeLimit: number = 24.5;
 
   moveDistance: number = 0.1;
   rotationDegree: number = 2;
@@ -34,13 +36,28 @@ export class Player {
     @Inject('initPos') initPos: THREE.Vector3
   ) {
     this.playerColor = objectColor;
-    this.playerGeometry = new THREE.BoxGeometry();
-    let playerMaterial = new THREE.MeshStandardMaterial({
-      color: this.playerColor,
-    });
-    this.player = new THREE.Mesh(this.playerGeometry, playerMaterial);
+    let material = new THREE.MeshStandardMaterial({ color: this.playerColor });
 
-    this.player.position.set(initPos.x, initPos.y, initPos.z); // initiate position
+    let headRadius = this.headRadius / 10;
+    let bodyHeight = this.bodyHeight / 10;
+
+    let SphereGeometry = new THREE.SphereGeometry(headRadius);
+    let sphere = new THREE.Mesh(SphereGeometry, material);
+
+    let cylinder = new THREE.CylinderGeometry(
+      headRadius + 0.1,
+      headRadius,
+      bodyHeight,
+      32
+    );
+    let cyl = new THREE.Mesh(cylinder, material);
+
+    this.player.position.copy(initPos);
+    this.player.add(cyl, sphere);
+
+    cyl.position.set(0, bodyHeight / 2, 0);
+    sphere.position.set(0, bodyHeight + headRadius, 0);
+
     this.player.userData['type'] = 'nativePlayer';
     this.player.userData['limit'] = {
       min: new THREE.Vector3(-this.edgeLimit, this.baseLimit, -this.edgeLimit),
