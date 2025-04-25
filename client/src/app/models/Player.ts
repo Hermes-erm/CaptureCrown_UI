@@ -6,6 +6,7 @@ import { Component, Inject } from '@angular/core';
 
 @Component({ template: '' })
 export class Player {
+  name: string = 'panda';
   playerColor: string = 'black';
   player: THREE.Object3D = new THREE.Object3D();
 
@@ -57,6 +58,11 @@ export class Player {
 
     cyl.position.set(0, bodyHeight / 2, 0);
     sphere.position.set(0, bodyHeight + headRadius, 0);
+
+    cyl.castShadow = true;
+    cyl.receiveShadow = true;
+    sphere.castShadow = true;
+    sphere.receiveShadow = true;
 
     this.player.userData['type'] = 'nativePlayer';
     this.player.userData['limit'] = {

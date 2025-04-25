@@ -6,6 +6,9 @@ import { GLTF, GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Player } from '../models/Player';
 import { Plane } from '../models/Plane';
+import { PayLoad, Message } from '../capture-crown';
+import { SocketClientService } from '../services/socketClient/socket-client.service';
+import { environment } from '../../environments/environment.development';
 
 @Component({
   selector: 'app-home',
@@ -15,26 +18,26 @@ import { Plane } from '../models/Plane';
 export class HomeComponent {
   isOrbit: boolean = true;
   isKeyOpt: boolean = true;
-  resetState: boolean = true;
   isJump: boolean = false;
-  maxHeight: number = 5;
 
   key_w: number = 0;
   key_a: number = 0;
   key_s: number = 0;
   key_d: number = 0;
 
+  tickRate: number = 4; // 4Hz <= 10Hz
+
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: number = 0xcfcfcf;
-  sphereColor: number = 0x32a852;
+  planeColor: string = '#34abeb';
+  sphereColor: string = '0x32a852';
 
   orbit: OrbitControls | null = null;
 
-  player: Player = new Player('#34abeb', new THREE.Vector3(0, 0, 0));
+  player: Player = new Player(this.planeColor, new THREE.Vector3(0, 0, 0));
   playerObject: THREE.Object3D = this.player.player;
 
   sphere: THREE.Mesh | null = null;
@@ -49,9 +52,8 @@ export class HomeComponent {
   );
 
   vec = new THREE.Vector3();
-
-  // draggable: THREE.Object3D | null = null; // manipulate object in 3d space
   objects: THREE.Object3D[] = [];
+  pivot: THREE.Object3D = new THREE.Object3D();
 
   loader: GLTFLoader = new GLTFLoader();
 
@@ -61,6 +63,18 @@ export class HomeComponent {
     new THREE.Vector3(0, 1.2, 3), // spv
     new THREE.Vector3(0, 3, 5), // tpv
   ];
+
+  players: PayLoad[] = [];
+
+  constructor(private socketClientService: SocketClientService) {
+    this.ambientLight.position.set(10, 10, 10);
+    this.directionalLight.position.set(-5, 10, -5);
+    // this.directionalLight.castShadow = true;
+
+    this.socketClientService.onPoseEvent().subscribe((players: PayLoad) => {
+      this.players[0] = players;
+    });
+  }
 
   ngOnInit() {
     this.container = document.getElementById('playground'); // element where we gonna put renderer
@@ -77,9 +91,6 @@ export class HomeComponent {
     let axesHelper = new THREE.AxesHelper(5);
 
     let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
-
-    this.directionalLight.position.set(0, 5, 3);
-    this.directionalLight.castShadow = true;
 
     this.scene.add(
       plane.plane,
@@ -100,7 +111,7 @@ export class HomeComponent {
     this.camera.position.set(view.x, view.y, view.z);
 
     this.playerObject.getWorldPosition(this.vec);
-    this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
+    this.camera.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
     this.pivot.add(this.camera); // uncomment to attach with it cube..
     this.scene.add(this.pivot, this.playerObject);
@@ -123,27 +134,23 @@ export class HomeComponent {
 
     this.animate();
     this.listenEvent();
-  }
 
-  enableOrbit(checked: boolean) {
-    if (this.orbit) this.orbit.enableRotate = checked;
-  }
+    setInterval(() => {
+      let position: THREE.Vector3 = this.playerObject.position;
+      let payLoad: PayLoad;
+      payLoad = {
+        name: this.player.name,
+        pose: {
+          x: position.x,
+          y: position.y,
+          z: position.z,
+          angle: this.playerObject.rotation.clone(),
+        },
+        color: this.player.playerColor,
+      };
 
-  enableKeyOpt(checked: boolean) {
-    this.isKeyOpt = checked;
-  }
-
-  reset() {
-    this.playerObject.position.set(0, 0.5, 0);
-    this.playerObject.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
-  }
-
-  toggleView() {
-    this.viewId++;
-    if (this.viewId > 2) this.viewId = 0;
-    const personView = this.view[this.viewId];
-
-    this.camera?.position.set(personView.x, personView.y, personView.z);
+      this.broadCastPosition(payLoad);
+    }, 1000);
   }
 
   animate() {
@@ -157,6 +164,8 @@ export class HomeComponent {
     if (this.key_s) this.player.moveDown();
     this.updateCameraPos();
 
+    // this.players.forEach((player: PayLoad) => {});
+
     this.objects.forEach((object3d: THREE.Object3D) => {
       object3d.position.clamp(
         object3d.userData['limit'].min,
@@ -166,12 +175,45 @@ export class HomeComponent {
     if (this.camera) this.renderer.render(this.scene, this.camera);
   }
 
-  counterHeight: number = 0;
-  jumpCount: number = 2;
+  reset() {
+    this.playerObject.position.set(0, 0, 0);
+    this.playerObject.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
+  }
+
+  toggleView() {
+    this.viewId++;
+    if (this.viewId > 2) this.viewId = 0;
+    const personView = this.view[this.viewId];
+
+    this.camera?.position.set(personView.x, personView.y, personView.z);
+  }
 
   listenEvent() {
     window.addEventListener('keydown', this.keydownEvent.bind(this)); // bind current class or local to the listener function, else it takes the "this" ( window instance ) in default
     window.addEventListener('keyup', this.keyUpEvent.bind(this));
+  }
+
+  updateCameraPos() {
+    this.playerObject.getWorldPosition(this.vec);
+    this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
+
+    this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
+
+    let euler = new THREE.Euler();
+    euler = this.playerObject.rotation.clone(); // clone and copy the orientation / rotation of box in to pivot
+    this.pivot.rotation.copy(euler);
+  }
+
+  broadCastPosition(payLoad: PayLoad) {
+    this.socketClientService.broadCast(environment.publishPosition, payLoad);
+  }
+
+  enableOrbit(checked: boolean) {
+    if (this.orbit) this.orbit.enableRotate = checked;
+  }
+
+  enableKeyOpt(checked: boolean) {
+    this.isKeyOpt = checked;
   }
 
   keydownEvent(e: KeyboardEvent) {
@@ -216,8 +258,6 @@ export class HomeComponent {
     }
   }
 
-  pivot: THREE.Object3D = new THREE.Object3D();
-
   createSphere() {
     let SphereGeometry = new THREE.SphereGeometry(0.5);
     let sphereMaterial = new THREE.MeshStandardMaterial({
@@ -231,20 +271,9 @@ export class HomeComponent {
 
     // this.sphere.userData = { draggable: false, name: 'SPHERE' }; // or this.box.userData['draggable'] = true;
     this.sphere.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0.5, -24.5),
-      max: new THREE.Vector3(24.5, this.maxHeight, 24.5),
+      min: new THREE.Vector3(-24.5, 0, -24.5),
+      max: new THREE.Vector3(24.5, 0.5, 24.5),
     };
-  }
-
-  updateCameraPos() {
-    this.playerObject.getWorldPosition(this.vec);
-    this.pivot.position.copy(this.vec); // copy the position of box and copy the vector in to pivot
-
-    this.camera?.lookAt(this.vec.x, this.vec.y, this.vec.z);
-
-    let euler = new THREE.Euler();
-    euler = this.playerObject.rotation.clone() || euler; // clone and copy the orientation / rotation of box in to pivot
-    this.pivot.rotation.copy(euler);
   }
 }
 
