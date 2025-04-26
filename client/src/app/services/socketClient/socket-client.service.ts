@@ -34,9 +34,9 @@ export class SocketClientService {
     });
   }
 
-  onPlayerLeft(): Observable<string> {
+  onPlayerLeft(): Observable<PayLoad> {
     return new Observable((subscriber) => {
-      this.socket.on(environment.onPlayerLeft, (data: string) => {
+      this.socket.on(environment.onPlayerLeft, (data: PayLoad) => {
         subscriber.next(data);
       });
     });

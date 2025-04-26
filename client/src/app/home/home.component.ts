@@ -75,11 +75,18 @@ export class HomeComponent {
     this.socketClientService
       .onPlayer(environment.playersPose)
       .subscribe((playersPose: PayLoad) => {
-        this.playersPose[0] = playersPose;
+        this.updatePlayersPosition(playersPose); //this.playersPose[0] = playersPose;
       });
 
-    this.socketClientService.onPlayerLeft().subscribe((playerName: string) => {
-      // console.log(playerName);
+    this.socketClientService.onPlayerLeft().subscribe((player: PayLoad) => {
+      let playerToExit = this.players.get(player.name);
+      const playerObject: THREE.Object3D | undefined =
+        this.scene.getObjectByName(player.name);
+      console.log('player left: ', playerToExit, playerObject);
+      if (playerToExit && playerObject) {
+        this.scene.remove();
+        this.players.delete(player.name);
+      }
     });
   }
 
@@ -125,7 +132,10 @@ export class HomeComponent {
     this.scene.add(this.pivot, this.playerObject);
 
     this.socketClientService.onLobby().subscribe((data: PayLoad[]) => {
-      console.log('from server ', data);
+      data.forEach((player: PayLoad) => {
+        if (this.players.get(player.name)) return;
+        this.onNewPlayer(player);
+      });
     });
 
     this.socketClientService
@@ -223,14 +233,11 @@ export class HomeComponent {
   }
 
   onNewPlayer(newPlayer: PayLoad) {
-    console.log(newPlayer);
     let pose = newPlayer.pose;
     let initPose: THREE.Vector3 = new THREE.Vector3(pose.x, pose.y, pose.z);
     let player = new Player(newPlayer.color, initPose);
     this.players.set(newPlayer.name, player);
     this.scene.add(player.player);
-    // this.lobbyPlayers[0] = new Player('red', new THREE.Vector3(1, 0, 1)).player;
-    // this.scene.add(this.lobbyPlayers[0]);
   }
 
   getIntoLobby(player: THREE.Object3D, color: string) {
@@ -240,9 +247,17 @@ export class HomeComponent {
       pose: { x: pose.x, y: pose.y, z: pose.z, angle: player.rotation.clone() },
       color: color,
     };
-    console.log(playerInfo);
 
     this.socketClientService.broadCast(environment.onNewPlayer, playerInfo);
+  }
+
+  updatePlayersPosition(data: PayLoad) {
+    const player: Player | undefined = this.players.get(data.name);
+    if (!player) return;
+    const playerObj: THREE.Object3D = player.player;
+    const pose = data.pose;
+    playerObj.position.set(pose.x, pose.y, pose.z);
+    playerObj.rotation.copy(data.pose.angle);
   }
 
   broadCastPosition(payLoad: PayLoad) {
