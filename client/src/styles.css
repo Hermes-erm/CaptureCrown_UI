@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+
 * {
   margin: 0;
 }
@@ -6,4 +7,18 @@
 html,
 body {
   height: 100%;
+  font-family: "Roboto", sans-serif;
 }
+
+/* this part not done by me..! */
+.custom-toast {
+  background-color: #844caf !important;
+  font-size: 20px !important;
+  color: azure !important;
+  border: 0 !important;
+  font-weight: 700 !important;
+  font-family: Verdana, Geneva, Tahoma, sans-serif !important;
+  height: 50px !important;
+}
+
+/* !importnant override existing or nebular's default style */

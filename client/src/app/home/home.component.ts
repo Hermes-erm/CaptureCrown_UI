@@ -64,15 +64,22 @@ export class HomeComponent {
     new THREE.Vector3(0, 3, 5), // tpv
   ];
 
-  players: PayLoad[] = [];
+  playersPose: PayLoad[] = [];
+  players: Map<string, Player> = new Map();
 
   constructor(private socketClientService: SocketClientService) {
     this.ambientLight.position.set(10, 10, 10);
     this.directionalLight.position.set(-5, 10, -5);
     // this.directionalLight.castShadow = true;
 
-    this.socketClientService.onPoseEvent().subscribe((players: PayLoad) => {
-      this.players[0] = players;
+    this.socketClientService
+      .onPlayer(environment.playersPose)
+      .subscribe((playersPose: PayLoad) => {
+        this.playersPose[0] = playersPose;
+      });
+
+    this.socketClientService.onPlayerLeft().subscribe((playerName: string) => {
+      // console.log(playerName);
     });
   }
 
@@ -114,7 +121,18 @@ export class HomeComponent {
     this.camera.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
     this.pivot.add(this.camera); // uncomment to attach with it cube..
+    this.getIntoLobby(this.playerObject, this.player.playerColor);
     this.scene.add(this.pivot, this.playerObject);
+
+    this.socketClientService.onLobby().subscribe((data: PayLoad[]) => {
+      console.log('from server ', data);
+    });
+
+    this.socketClientService
+      .onPlayer(environment.onNewPlayer)
+      .subscribe((player: PayLoad) => {
+        this.onNewPlayer(player);
+      });
 
     this.pivot.userData['limit'] = {
       min: new THREE.Vector3(-24.5, 0, -24.5),
@@ -149,7 +167,7 @@ export class HomeComponent {
         color: this.player.playerColor,
       };
 
-      this.broadCastPosition(payLoad);
+      // this.broadCastPosition(payLoad);
     }, 1000);
   }
 
@@ -204,8 +222,31 @@ export class HomeComponent {
     this.pivot.rotation.copy(euler);
   }
 
+  onNewPlayer(newPlayer: PayLoad) {
+    console.log(newPlayer);
+    let pose = newPlayer.pose;
+    let initPose: THREE.Vector3 = new THREE.Vector3(pose.x, pose.y, pose.z);
+    let player = new Player(newPlayer.color, initPose);
+    this.players.set(newPlayer.name, player);
+    this.scene.add(player.player);
+    // this.lobbyPlayers[0] = new Player('red', new THREE.Vector3(1, 0, 1)).player;
+    // this.scene.add(this.lobbyPlayers[0]);
+  }
+
+  getIntoLobby(player: THREE.Object3D, color: string) {
+    let pose: THREE.Vector3 = player.position;
+    let playerInfo: PayLoad = {
+      name: Math.floor(Math.random() * 10000).toString(),
+      pose: { x: pose.x, y: pose.y, z: pose.z, angle: player.rotation.clone() },
+      color: color,
+    };
+    console.log(playerInfo);
+
+    this.socketClientService.broadCast(environment.onNewPlayer, playerInfo);
+  }
+
   broadCastPosition(payLoad: PayLoad) {
-    this.socketClientService.broadCast(environment.publishPosition, payLoad);
+    this.socketClientService.broadCast(environment.playersPose, payLoad);
   }
 
   enableOrbit(checked: boolean) {

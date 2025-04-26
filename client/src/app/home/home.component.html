@@ -5,11 +5,7 @@
       <div class="orbit">
         <p>Orbitting :</p>
         <label class="toggle-switch square">
-          <input
-            type="checkbox"
-            [ngModel]="isOrbit"
-            (ngModelChange)="enableOrbit($event)"
-          />
+          <input type="checkbox" [ngModel]="isOrbit" (ngModelChange)="enableOrbit($event)" />
           <span class="slider"></span>
         </label>
       </div>
@@ -17,23 +13,14 @@
       <div class="keyboard-Control">
         <p>key-Opt :</p>
         <label class="toggle-switch square">
-          <input
-            type="checkbox"
-            [ngModel]="isKeyOpt"
-            (ngModelChange)="enableKeyOpt($event)"
-          />
+          <input type="checkbox" [ngModel]="isKeyOpt" (ngModelChange)="enableKeyOpt($event)" />
           <span class="slider"></span>
         </label>
       </div>
       <br />
       <div class="reset">
         <p>Reset :</p>
-        <input
-          class="reset-button"
-          type="button"
-          value="Reset"
-          (click)="reset()"
-        />
+        <input class="reset-button" type="button" value="Reset" (click)="reset()" />
       </div>
     </div>
   </div>

@@ -34,7 +34,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
+            "styles": [
+              "src/styles.css",
+              "node_modules/@nebular/theme/styles/prebuilt/default.css"
+            ],
             "scripts": []
           },
           "configurations": {
@@ -94,7 +97,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
+            "styles": [
+              "src/styles.css",
+              "node_modules/@nebular/theme/styles/prebuilt/default.css"
+            ],
             "scripts": []
           }
         }
