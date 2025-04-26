@@ -84,7 +84,8 @@ export class HomeComponent {
         this.scene.getObjectByName(player.name);
       console.log('player left: ', playerToExit, playerObject);
       if (playerToExit && playerObject) {
-        this.scene.remove();
+        console.log('player gonna remove: ', playerToExit);
+        this.scene.remove(playerObject);
         this.players.delete(player.name);
       }
     });
@@ -128,10 +129,11 @@ export class HomeComponent {
     this.camera.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
     this.pivot.add(this.camera); // uncomment to attach with it cube..
-    this.getIntoLobby(this.playerObject, this.player.playerColor);
     this.scene.add(this.pivot, this.playerObject);
+    this.getIntoLobby(this.playerObject, this.player.playerColor);
 
     this.socketClientService.onLobby().subscribe((data: PayLoad[]) => {
+      console.log('from server: ', data);
       data.forEach((player: PayLoad) => {
         if (this.players.get(player.name)) return;
         this.onNewPlayer(player);
@@ -141,6 +143,7 @@ export class HomeComponent {
     this.socketClientService
       .onPlayer(environment.onNewPlayer)
       .subscribe((player: PayLoad) => {
+        console.log('new single player arrived: ', player);
         this.onNewPlayer(player);
       });
 
@@ -241,6 +244,7 @@ export class HomeComponent {
   }
 
   getIntoLobby(player: THREE.Object3D, color: string) {
+    console.log('get on lobby: ', player.name);
     let pose: THREE.Vector3 = player.position;
     let playerInfo: PayLoad = {
       name: Math.floor(Math.random() * 10000).toString(),
