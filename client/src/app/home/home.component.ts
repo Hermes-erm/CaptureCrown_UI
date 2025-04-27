@@ -197,6 +197,7 @@ export class HomeComponent {
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
 
+    if (this.message) return;
     if (this.player.isJump) this.player.jump();
 
     if (this.key_w) this.player.moveUp();
