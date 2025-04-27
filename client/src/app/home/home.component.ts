@@ -7,8 +7,10 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Player } from '../models/Player';
 import { Plane } from '../models/Plane';
 import { PayLoad, Message } from '../capture-crown';
-import { SocketClientService } from '../services/socketClient/socket-client.service';
 import { environment } from '../../environments/environment.development';
+import { SocketClientService } from '../services/socketClient/socket-client.service';
+import { ToastServiceService } from '../services/toastService/toast-service.service';
+import { AuxiliaryService } from '../services/auxiliaryService/auxiliary.service';
 
 @Component({
   selector: 'app-home',
@@ -32,12 +34,22 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: string = '#34abeb';
+  planeColor: string = '#b2b0f7';
   sphereColor: string = '0x32a852';
+
+  /**
+    params for Dom & styles
+   */
+  name: string = '';
+  inputStatus: string = 'basic';
+
+  hideInput: boolean = false;
+  hideButton: boolean = false;
+  /** */
 
   orbit: OrbitControls | null = null;
 
-  player: Player = new Player(this.planeColor, new THREE.Vector3(0, 0, 0));
+  player: Player = new Player('#34abeb', new THREE.Vector3(0, 0, 0));
   playerObject: THREE.Object3D = this.player.player;
 
   sphere: THREE.Mesh | null = null;
@@ -67,7 +79,11 @@ export class HomeComponent {
   playersPose: PayLoad[] = [];
   players: Map<string, Player> = new Map();
 
-  constructor(private socketClientService: SocketClientService) {
+  constructor(
+    private socketClientService: SocketClientService,
+    private toastServiceService: ToastServiceService,
+    private auxiliaryService: AuxiliaryService
+  ) {
     this.ambientLight.position.set(10, 10, 10);
     this.directionalLight.position.set(-5, 10, -5);
     // this.directionalLight.castShadow = true;
@@ -79,13 +95,11 @@ export class HomeComponent {
       });
 
     this.socketClientService.onPlayerLeft().subscribe((player: PayLoad) => {
-      let playerToExit = this.players.get(player.name);
-      const playerObject: THREE.Object3D | undefined =
-        this.scene.getObjectByName(player.name);
-      console.log('player left: ', playerToExit, playerObject);
-      if (playerToExit && playerObject) {
+      let playerToExit: Player | undefined = this.players.get(player.name);
+      console.log('player left: ', playerToExit);
+      if (playerToExit) {
         console.log('player gonna remove: ', playerToExit);
-        this.scene.remove(playerObject);
+        this.scene.remove(playerToExit.player);
         this.players.delete(player.name);
       }
     });
@@ -105,7 +119,7 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5);
 
-    let plane = new Plane(new THREE.Vector2(50, 50), 0.2, '#b2b0f7');
+    let plane = new Plane(new THREE.Vector2(50, 50), 0.2, this.planeColor);
 
     this.scene.add(
       plane.plane,
@@ -128,9 +142,9 @@ export class HomeComponent {
     this.playerObject.getWorldPosition(this.vec);
     this.camera.lookAt(this.vec.x, this.vec.y, this.vec.z);
 
-    this.pivot.add(this.camera); // uncomment to attach with it cube..
-    this.scene.add(this.pivot, this.playerObject);
-    this.getIntoLobby(this.playerObject, this.player.playerColor);
+    // this.pivot.add(this.camera); // uncomment to attach with it cube..
+    // this.scene.add(this.pivot, this.playerObject);
+    // this.getIntoLobby(this.playerObject, this.player.playerColor);
 
     this.socketClientService.onLobby().subscribe((data: PayLoad[]) => {
       console.log('from server: ', data);
@@ -222,6 +236,35 @@ export class HomeComponent {
   listenEvent() {
     window.addEventListener('keydown', this.keydownEvent.bind(this)); // bind current class or local to the listener function, else it takes the "this" ( window instance ) in default
     window.addEventListener('keyup', this.keyUpEvent.bind(this));
+
+    let fieldElement: HTMLElement | null = document.getElementById('name-ip');
+    if (!fieldElement) return;
+    fieldElement.addEventListener('keypress', (event: KeyboardEvent) => {
+      if (event.key === 'Enter') this.registerName();
+    });
+  }
+
+  // without player (hidden), camera track the player`s position in the static place of itself.. (camera)
+  registerName() {
+    if (!this.name) {
+      this.inputStatus = 'danger';
+      return;
+    }
+
+    this.hideInput = true;
+    this.hideButton = true;
+
+    this.player.name = this.name;
+    this.playerObject.name = this.name;
+
+    if (this.camera) this.pivot.add(this.camera);
+    this.scene.add(this.pivot, this.playerObject);
+
+    this.getIntoLobby(this.playerObject, this.auxiliaryService.generateColor()); // this.player.playerColor
+  }
+
+  toastMessage(data: string) {
+    this.toastServiceService.showToast('top-left', data);
   }
 
   updateCameraPos() {
@@ -245,9 +288,10 @@ export class HomeComponent {
 
   getIntoLobby(player: THREE.Object3D, color: string) {
     console.log('get on lobby: ', player.name);
+    this.player.meshMaterial.color.set(color);
     let pose: THREE.Vector3 = player.position;
     let playerInfo: PayLoad = {
-      name: Math.floor(Math.random() * 10000).toString(),
+      name: player.name,
       pose: { x: pose.x, y: pose.y, z: pose.z, angle: player.rotation.clone() },
       color: color,
     };

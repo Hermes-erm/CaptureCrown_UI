@@ -6,9 +6,11 @@ import { Component, Inject } from '@angular/core';
 
 @Component({ template: '' })
 export class Player {
-  name: string = 'panda';
-  playerColor: string = 'black';
+  name: string = '';
+  playerColor: string;
   player: THREE.Object3D = new THREE.Object3D();
+
+  meshMaterial: THREE.MeshStandardMaterial;
 
   headRadius: number = 2;
   bodyHeight: number = 8;
@@ -37,13 +39,15 @@ export class Player {
     @Inject('initPos') initPos: THREE.Vector3
   ) {
     this.playerColor = objectColor;
-    let material = new THREE.MeshStandardMaterial({ color: this.playerColor });
+    this.meshMaterial = new THREE.MeshStandardMaterial({
+      color: this.playerColor,
+    });
 
     let headRadius = this.headRadius / 10;
     let bodyHeight = this.bodyHeight / 10;
 
     let SphereGeometry = new THREE.SphereGeometry(headRadius);
-    let sphere = new THREE.Mesh(SphereGeometry, material);
+    let sphere = new THREE.Mesh(SphereGeometry, this.meshMaterial);
 
     let cylinder = new THREE.CylinderGeometry(
       headRadius + 0.1,
@@ -51,7 +55,7 @@ export class Player {
       bodyHeight,
       32
     );
-    let cyl = new THREE.Mesh(cylinder, material);
+    let cyl = new THREE.Mesh(cylinder, this.meshMaterial);
 
     this.player.position.copy(initPos);
     this.player.add(cyl, sphere);

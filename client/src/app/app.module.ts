@@ -11,7 +11,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { NbThemeModule, NbToastrModule } from '@nebular/theme';
 import { NbEvaIconsModule } from '@nebular/eva-icons';
-import { NbIconModule, NbLayoutModule, NbSidebarModule } from '@nebular/theme';
+import {
+  NbIconModule,
+  NbLayoutModule,
+  NbSidebarModule,
+  NbButtonModule,
+  NbSelectModule,
+  NbInputModule,
+} from '@nebular/theme';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent, ChatboxComponent],
@@ -24,6 +31,9 @@ import { NbIconModule, NbLayoutModule, NbSidebarModule } from '@nebular/theme';
     NbEvaIconsModule,
     NbIconModule,
     NbLayoutModule,
+    NbButtonModule,
+    NbSelectModule,
+    NbInputModule,
     NbThemeModule.forRoot(),
     NbToastrModule.forRoot(),
     NbSidebarModule.forRoot(),

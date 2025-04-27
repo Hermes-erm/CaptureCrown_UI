@@ -1,13 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
-
+@import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
 * {
   margin: 0;
+  /* border: 1px solid; */
 }
 
 html,
 body {
   height: 100%;
-  font-family: "Roboto", sans-serif;
 }
 
 /* this part not done by me..! */
@@ -19,6 +19,16 @@ body {
   font-weight: 700 !important;
   font-family: Verdana, Geneva, Tahoma, sans-serif !important;
   height: 50px !important;
+}
+
+.nb-theme-default
+  nb-layout
+  .layout
+  .layout-container
+  .content
+  .columns
+  nb-layout-column {
+  padding: 0 !important;
 }
 
 /* !importnant override existing or nebular's default style */
