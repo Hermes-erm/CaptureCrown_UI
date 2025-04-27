@@ -205,6 +205,11 @@ export class HomeComponent {
     this.listenEvent();
   }
 
+  reset() {
+    this.playerObject.position.set(0, 0, 0);
+    this.playerObject.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
+  }
+
   animate() {
     requestAnimationFrame(() => this.animate()); // runs on 60 FPS || sync with browser's refresh rate
 
@@ -225,11 +230,6 @@ export class HomeComponent {
       );
     });
     if (this.camera) this.renderer.render(this.scene, this.camera);
-  }
-
-  reset() {
-    this.playerObject.position.set(0, 0, 0);
-    this.playerObject.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
   }
 
   toggleView() {
@@ -277,11 +277,10 @@ export class HomeComponent {
     if (this.camera) this.pivot.add(this.camera);
     this.scene.add(this.pivot, this.playerObject);
 
-    this.getIntoLobby(this.playerObject, this.auxiliaryService.generateColor()); // this.player.playerColor
-  }
+    let initialPose = this.getInitialPose();
+    this.playerObject.position.set(initialPose.x, 0, initialPose.z);
 
-  toastMessage(data: string) {
-    this.toastServiceService.showToast('top-left', data);
+    this.getIntoLobby(this.playerObject, this.auxiliaryService.generateColor()); // this.player.playerColor
   }
 
   updateCameraPos() {
@@ -295,38 +294,26 @@ export class HomeComponent {
     this.pivot.rotation.copy(euler);
   }
 
-  onNewPlayer(newPlayer: PayLoad) {
-    let pose = newPlayer.pose;
-    let initPose: THREE.Vector3 = new THREE.Vector3(pose.x, pose.y, pose.z);
-    let player = new Player(newPlayer.color, initPose);
-    this.players.set(newPlayer.name, player);
-    this.scene.add(player.player);
+  toastMessage(data: string) {
+    this.toastServiceService.showToast('top-left', data);
   }
 
-  getIntoLobby(player: THREE.Object3D, color: string) {
-    console.log('get on lobby: ', player.name);
-    this.player.meshMaterial.color.set(color);
-    let pose: THREE.Vector3 = player.position;
-    let playerInfo: PayLoad = {
-      name: player.name,
-      pose: { x: pose.x, y: pose.y, z: pose.z, angle: player.rotation.clone() },
-      color: color,
-    };
-
-    this.socketClientService.broadCast(environment.onNewPlayer, playerInfo);
-  }
-
-  updatePlayersPosition(data: PayLoad) {
-    const player: Player | undefined = this.players.get(data.name);
-    if (!player) return;
-    const playerObj: THREE.Object3D = player.player;
-    const pose = data.pose;
-    playerObj.position.set(pose.x, pose.y, pose.z);
-    playerObj.rotation.copy(data.pose.angle);
-  }
-
-  broadCastPosition(payLoad: PayLoad) {
-    this.socketClientService.broadCast(environment.playersPose, payLoad);
+  keyUpEvent(e: KeyboardEvent) {
+    if (!this.isKeyOpt) return;
+    switch (e.key.toLowerCase()) {
+      case 'w':
+        this.key_w = 0;
+        break;
+      case 'a':
+        this.key_a = 0;
+        break;
+      case 's':
+        this.key_s = 0;
+        break;
+      case 'd':
+        this.key_d = 0;
+        break;
+    }
   }
 
   enableOrbit(checked: boolean) {
@@ -361,22 +348,55 @@ export class HomeComponent {
     }
   }
 
-  keyUpEvent(e: KeyboardEvent) {
-    if (!this.isKeyOpt) return;
-    switch (e.key.toLowerCase()) {
-      case 'w':
-        this.key_w = 0;
+  onNewPlayer(newPlayer: PayLoad) {
+    let pose = newPlayer.pose;
+    let initPose: THREE.Vector3 = new THREE.Vector3(pose.x, pose.y, pose.z);
+    let player = new Player(newPlayer.color, initPose);
+    this.players.set(newPlayer.name, player);
+    this.scene.add(player.player);
+  }
+
+  broadCastPosition(payLoad: PayLoad) {
+    this.socketClientService.broadCast(environment.playersPose, payLoad);
+  }
+
+  updatePlayersPosition(data: PayLoad) {
+    const player: Player | undefined = this.players.get(data.name);
+    if (!player) return;
+    const playerObj: THREE.Object3D = player.player;
+    const pose = data.pose;
+    playerObj.position.set(pose.x, pose.y, pose.z);
+    playerObj.rotation.copy(data.pose.angle);
+  }
+
+  getInitialPose(): { x: number; z: number } {
+    let isPoseExist: boolean = false;
+    let randomPose = this.auxiliaryService.getRandomCoordinate();
+
+    const playersPose = this.players.values(); // retuns MapIterator!
+    for (let player of playersPose) {
+      let pose = player.player.position;
+      if (pose.x == randomPose.x && pose.z == randomPose.z) {
+        isPoseExist = true;
         break;
-      case 'a':
-        this.key_a = 0;
-        break;
-      case 's':
-        this.key_s = 0;
-        break;
-      case 'd':
-        this.key_d = 0;
-        break;
+      }
     }
+
+    if (isPoseExist) this.getInitialPose();
+    return randomPose;
+  }
+
+  getIntoLobby(player: THREE.Object3D, color: string) {
+    console.log('get on lobby: ', player.name);
+    this.player.meshMaterial.color.set(color);
+    let pose: THREE.Vector3 = player.position;
+    let playerInfo: PayLoad = {
+      name: player.name,
+      pose: { x: pose.x, y: pose.y, z: pose.z, angle: player.rotation.clone() },
+      color: color,
+    };
+
+    this.socketClientService.broadCast(environment.onNewPlayer, playerInfo);
   }
 
   createSphere() {
