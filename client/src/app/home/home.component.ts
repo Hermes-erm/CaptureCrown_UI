@@ -27,7 +27,7 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  tickRate: number = 4; // 4Hz <= 10Hz
+  tickRate: number = 1; // 4Hz <= 10Hz
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
@@ -181,23 +181,6 @@ export class HomeComponent {
 
     // this.animate();
     // this.listenEvent();
-
-    setInterval(() => {
-      let position: THREE.Vector3 = this.playerObject.position;
-      let payLoad: PayLoad;
-      payLoad = {
-        name: this.player.name,
-        pose: {
-          x: position.x,
-          y: position.y,
-          z: position.z,
-          angle: this.playerObject.rotation.clone(),
-        },
-        color: this.player.playerColor,
-      };
-
-      // this.broadCastPosition(payLoad);
-    }, 1000);
   }
 
   ngAfterViewInit() {
@@ -253,6 +236,7 @@ export class HomeComponent {
 
   // without player (hidden), camera track the player`s position in the static place of itself.. (camera)
   registerName() {
+    this.name = this.name.trim();
     if (!this.name) {
       this.inputStatus = 'danger';
       return;
@@ -397,6 +381,23 @@ export class HomeComponent {
     };
 
     this.socketClientService.broadCast(environment.onNewPlayer, playerInfo);
+
+    setInterval(() => {
+      let position: THREE.Vector3 = this.playerObject.position;
+      let payLoad: PayLoad;
+      payLoad = {
+        name: this.player.name,
+        pose: {
+          x: position.x,
+          y: position.y,
+          z: position.z,
+          angle: this.playerObject.rotation.clone(),
+        },
+        color: this.player.playerColor,
+      };
+
+      this.broadCastPosition(payLoad);
+    }, 1000 / this.tickRate);
   }
 
   createSphere() {

@@ -25,8 +25,8 @@ export class AuxiliaryService {
     let x = Math.floor(Math.random() * 25);
     let z = Math.floor(Math.random() * 25);
 
-    if (x % 2) x *= -1;
-    if (z % 2) z *= -1;
+    if (!(x % 2)) x *= -1;
+    if (!(z % 2)) z *= -1;
 
     return { x: x, z: z };
   }
