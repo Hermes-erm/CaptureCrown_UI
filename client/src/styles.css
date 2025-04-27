@@ -12,13 +12,13 @@ body {
 
 /* out of the scope, guys! */
 .custom-toast {
-  background-color: #844caf !important;
+  background-color: #7ba9ee !important;
   font-size: 20px !important;
-  color: azure !important;
+  color: white !important;
   border: 0 !important;
   font-weight: 700 !important;
-  font-family: Verdana, Geneva, Tahoma, sans-serif !important;
-  height: 50px !important;
+  font-family: "Cascadia Mono", sans-serif !important;
+  height: 60px !important;
 }
 
 .nb-theme-default

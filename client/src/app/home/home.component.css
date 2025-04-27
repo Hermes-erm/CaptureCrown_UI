@@ -5,6 +5,8 @@
 .options,
 .chat-container,
 .chat-info,
+.left-layout,
+.chat-tag,
 .options > div {
   display: flex;
   align-items: center;
@@ -21,9 +23,22 @@
   justify-content: space-around;
 }
 
-#playground {
-  height: 85%;
+.left-layout {
+  height: 100%;
   width: 75%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+#playground {
+  height: 80%;
+  width: 100%;
+}
+
+.chat-tag {
+  width: 30%;
+  justify-content: space-around;
 }
 
 .welcome-container {

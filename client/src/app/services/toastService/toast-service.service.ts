@@ -6,14 +6,14 @@ import { NbGlobalPhysicalPosition, NbToastrService } from '@nebular/theme';
 })
 export class ToastServiceService {
   positions = NbGlobalPhysicalPosition;
-  messageIcon: string = '';
+  messageIcon: string = 'message-square-outline';
 
   constructor(private toastrService: NbToastrService) {}
 
-  showToast(position: any, message: string) {
-    this.toastrService.show('info', message, {
-      position: position,
-      duration: 3000,
+  showToast(name: string, message: string) {
+    this.toastrService.show(name, message, {
+      position: this.positions.TOP_RIGHT,
+      duration: 6000,
       toastClass: 'custom-toast',
       icon: this.messageIcon,
     });

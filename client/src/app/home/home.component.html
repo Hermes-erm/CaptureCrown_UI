@@ -1,7 +1,23 @@
 <div class="home">
   <div class="container">
-    <div id="playground"></div>
-    <div class="welcome-container" *ngIf="activeContainer === 'welcome'">
+    <div class="left-layout">
+      <div id="playground"></div>
+      <div class="chat-tag">
+        <input
+          id="chat-field"
+          type="text"
+          nbInput
+          status="info"
+          placeholder="join the chat.."
+          [(ngModel)]="message"
+          [disabled]="!hideInput"
+        />
+        <button nbButton status="info" (click)="sendMessage()">
+          <nb-icon icon="navigation-2-outline"></nb-icon>
+        </button>
+      </div>
+    </div>
+    <div class="welcome-container" *ngIf="activeContainer == 'welcome'">
       <div class="text">{{ welcomeText }}</div>
       <div class="field-input">
         <input
@@ -24,20 +40,20 @@
         </button>
       </div>
     </div>
-    <div class="chat-container" *ngIf="activeContainer !== 'welcome'">
+    <div class="chat-container" *ngIf="activeContainer == 'chat'">
       <div class="chat-info">
         <p>
           Welcome {{ this.name }}, here's your lobby, be gentle with your people
         </p>
       </div>
-      <input
+      <!-- <input
         id="chat-field"
         type="text"
         nbInput
         fullWidth
         status="info"
         placeholder="Info"
-      />
+      /> -->
     </div>
     <!-- <div class="options"> -->
     <!-- <div class="orbit">
@@ -85,3 +101,5 @@
     <!-- </div> -->
   </div>
 </div>
+
+<!-- *ngIf="activeContainer !== 'chat'" -->

@@ -27,7 +27,7 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  tickRate: number = 1; // 4Hz <= 10Hz
+  tickRate: number = 4; // 4Hz <= 10Hz
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
@@ -41,6 +41,7 @@ export class HomeComponent {
     params for Dom & styles
    */
   name: string = '';
+  message: string = '';
   inputStatus: string = 'basic';
 
   hideInput: boolean = false;
@@ -228,10 +229,16 @@ export class HomeComponent {
     window.addEventListener('keyup', this.keyUpEvent.bind(this));
 
     let fieldElement: HTMLElement | null = document.getElementById('name-ip');
-    if (!fieldElement) return;
-    fieldElement.addEventListener('keypress', (event: KeyboardEvent) => {
+    fieldElement?.addEventListener('keypress', (event: KeyboardEvent) => {
       if (event.key === 'Enter') this.registerName();
     });
+  }
+
+  sendMessage() {
+    let message = this.message.trim();
+    if (!message) return;
+    this.toastMessage(this.name, message);
+    this.message = '';
   }
 
   // without player (hidden), camera track the player`s position in the static place of itself.. (camera)
@@ -252,6 +259,8 @@ export class HomeComponent {
     });
     if (!this.name) return;
 
+    this.activeContainer = 'chat';
+
     this.hideInput = true;
     this.hideButton = true;
 
@@ -265,6 +274,17 @@ export class HomeComponent {
     this.playerObject.position.set(initialPose.x, 0, initialPose.z);
 
     this.getIntoLobby(this.playerObject, this.auxiliaryService.generateColor()); // this.player.playerColor
+
+    this.socketClientService.onMessage().subscribe((data: Message) => {
+      this.toastMessage(data.name, data.message);
+    });
+
+    let chatElement: HTMLElement | null = document.getElementById('chat-field');
+    console.log(chatElement);
+
+    chatElement?.addEventListener('keypress', (event: KeyboardEvent) => {
+      if (event.key === 'Enter') this.sendMessage();
+    });
   }
 
   updateCameraPos() {
@@ -278,8 +298,8 @@ export class HomeComponent {
     this.pivot.rotation.copy(euler);
   }
 
-  toastMessage(data: string) {
-    this.toastServiceService.showToast('top-left', data);
+  toastMessage(name: string, data: string) {
+    this.toastServiceService.showToast(name, data);
   }
 
   keyUpEvent(e: KeyboardEvent) {
