@@ -1,12 +1,43 @@
 <div class="home">
   <div class="container">
     <div id="playground"></div>
-    <div class="welcome-container">
-      <div class="text">Give your name to get into lobby..</div>
+    <div class="welcome-container" *ngIf="activeContainer === 'welcome'">
+      <div class="text">{{ welcomeText }}</div>
       <div class="field-input">
-        <input id="name-ip" type="text" nbInput fullWidth [status]="this.inputStatus" placeholder="name" [(ngModel)]="name" [disabled]="hideInput" />
-        <button nbButton size="medium" (click)="registerName()" [disabled]="hideButton" > Begin </button>
+        <input
+          id="name-ip"
+          type="text"
+          nbInput
+          fullWidth
+          [status]="this.inputStatus"
+          placeholder="name"
+          [(ngModel)]="name"
+          [disabled]="hideInput"
+        />
+        <button
+          nbButton
+          size="medium"
+          (click)="registerName()"
+          [disabled]="hideButton"
+        >
+          Begin
+        </button>
       </div>
+    </div>
+    <div class="chat-container" *ngIf="activeContainer !== 'welcome'">
+      <div class="chat-info">
+        <p>
+          Welcome {{ this.name }}, here's your lobby, be gentle with your people
+        </p>
+      </div>
+      <input
+        id="chat-field"
+        type="text"
+        nbInput
+        fullWidth
+        status="info"
+        placeholder="Info"
+      />
     </div>
     <!-- <div class="options"> -->
     <!-- <div class="orbit">

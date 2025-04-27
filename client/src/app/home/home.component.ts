@@ -45,6 +45,9 @@ export class HomeComponent {
 
   hideInput: boolean = false;
   hideButton: boolean = false;
+
+  activeContainer: string = 'welcome';
+  welcomeText: string = `Give your name to get into lobby..`;
   /** */
 
   orbit: OrbitControls | null = null;
@@ -170,15 +173,14 @@ export class HomeComponent {
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement); // Also can it refered as => which navigate the scene by angular view
 
     // this.orbit.enableDamping = true;
-
     this.orbit.enableZoom = true;
     this.orbit.zoomSpeed = 1;
     this.orbit.enablePan = true;
     this.orbit.enableRotate = this.isOrbit; // true to enable orbiting..
     this.objects.push(this.playerObject, this.pivot);
 
-    this.animate();
-    this.listenEvent();
+    // this.animate();
+    // this.listenEvent();
 
     setInterval(() => {
       let position: THREE.Vector3 = this.playerObject.position;
@@ -196,6 +198,11 @@ export class HomeComponent {
 
       // this.broadCastPosition(payLoad);
     }, 1000);
+  }
+
+  ngAfterViewInit() {
+    this.animate();
+    this.listenEvent();
   }
 
   animate() {
@@ -250,6 +257,16 @@ export class HomeComponent {
       this.inputStatus = 'danger';
       return;
     }
+
+    this.players.forEach((player: Player, name: string) => {
+      if (name === this.name) {
+        this.welcomeText = `Player with this name already exists in this lobby, try another..`;
+        this.inputStatus = 'danger';
+        this.name = '';
+        return;
+      }
+    });
+    if (!this.name) return;
 
     this.hideInput = true;
     this.hideButton = true;
