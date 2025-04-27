@@ -232,12 +232,21 @@ export class HomeComponent {
     fieldElement?.addEventListener('keypress', (event: KeyboardEvent) => {
       if (event.key === 'Enter') this.registerName();
     });
+
+    let chatElement: HTMLElement | null = document.getElementById('chat-field');
+    chatElement?.addEventListener('keypress', (event: KeyboardEvent) => {
+      if (event.key === 'Enter') this.sendMessage();
+    });
   }
 
   sendMessage() {
     let message = this.message.trim();
     if (!message) return;
-    this.toastMessage(this.name, message);
+    this.socketClientService.broadCast(environment.message, {
+      name: this.name,
+      message: message,
+    });
+    // this.toastMessage(this.name, message);
     this.message = '';
   }
 
@@ -277,13 +286,6 @@ export class HomeComponent {
 
     this.socketClientService.onMessage().subscribe((data: Message) => {
       this.toastMessage(data.name, data.message);
-    });
-
-    let chatElement: HTMLElement | null = document.getElementById('chat-field');
-    console.log(chatElement);
-
-    chatElement?.addEventListener('keypress', (event: KeyboardEvent) => {
-      if (event.key === 'Enter') this.sendMessage();
     });
   }
 
