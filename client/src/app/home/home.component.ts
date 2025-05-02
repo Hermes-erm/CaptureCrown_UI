@@ -34,7 +34,7 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: string = '#b2b0f7';
+  planeColor: string = '#E9E8E8'; //  #90EE90
   sphereColor: string = '0x32a852';
 
   /**
@@ -120,17 +120,18 @@ export class HomeComponent {
       this.container.clientHeight
     );
     this.renderer.shadowMap.enabled = true;
+    this.renderer.setClearColor('#19A7CE', 1); // (clr, alpha) alpha -> transparency, 0 <= 1
 
     let axesHelper = new THREE.AxesHelper(5);
 
     let plane = new Plane(new THREE.Vector2(50, 50), 0.2, this.planeColor);
 
     this.scene.add(
-      plane.plane,
       axesHelper,
+      this.gridHelper,
+      plane.plane,
       this.ambientLight,
-      this.directionalLight,
-      this.gridHelper
+      this.directionalLight
     );
 
     this.camera = new THREE.PerspectiveCamera(
