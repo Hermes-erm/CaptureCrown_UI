@@ -27,7 +27,7 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  tickRate: number = 4; // 4Hz <= 10Hz
+  tickRate: number = 10; // 4Hz <= 10Hz
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
