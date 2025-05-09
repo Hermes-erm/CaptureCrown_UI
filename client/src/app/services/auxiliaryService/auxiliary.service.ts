@@ -58,8 +58,6 @@ export class AuxiliaryService {
     if (Math.floor(Math.random() * 2)) x *= -1;
     if (Math.floor(Math.random() * 2)) z *= -1;
 
-    console.log(x, z);
-
     return { x: x, z: z };
   }
 }

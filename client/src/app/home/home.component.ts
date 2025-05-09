@@ -164,7 +164,7 @@ export class HomeComponent {
     // this.getIntoLobby(this.playerObject, this.player.playerColor);
 
     this.socketClientService.onLobby().subscribe((data: PayLoad[]) => {
-      console.log('from server: ', data);
+      // console.log('from server: ', data);
       data.forEach((player: PayLoad) => {
         if (this.players.get(player.name)) return;
         this.onNewPlayer(player);
@@ -174,7 +174,7 @@ export class HomeComponent {
     this.socketClientService
       .onPlayer(environment.onNewPlayer)
       .subscribe((player: PayLoad) => {
-        console.log('new single player arrived: ', player);
+        // console.log('new single player arrived: ', player);
         this.onNewPlayer(player);
       });
 
@@ -409,7 +409,7 @@ export class HomeComponent {
   }
 
   getIntoLobby(player: THREE.Object3D, color: string) {
-    console.log('get on lobby: ', player.name);
+    // console.log('get on lobby: ', player.name);
     this.player.meshMaterial.color.set(color);
     let pose: THREE.Vector3 = player.position;
     let playerInfo: PayLoad = {
