@@ -27,14 +27,14 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  tickRate: number = 10; // 4Hz <= 10Hz
+  tickRate: number = 20; // 4Hz <= 10Hz
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: string = '#E9E8E8'; //  #90EE90
+  planeColor: string = '#6fd66f'; //  #90EE90
   sphereColor: string = '0x32a852';
 
   /**
@@ -59,7 +59,7 @@ export class HomeComponent {
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
-  gridHelper = new THREE.GridHelper(50, 50);
+  gridHelper = new THREE.GridHelper(150, 150);
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
   ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
   directionalLightHelper = new THREE.DirectionalLightHelper(
@@ -124,10 +124,10 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5);
 
-    let plane = new Plane(new THREE.Vector2(50, 50), 0.2, this.planeColor);
+    let plane = new Plane(new THREE.Vector2(150, 150), 0.2, this.planeColor);
 
     this.scene.add(
-      axesHelper,
+      // axesHelper,
       this.gridHelper,
       plane.plane,
       this.ambientLight,
