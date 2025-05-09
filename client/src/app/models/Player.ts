@@ -17,7 +17,7 @@ export class Player {
 
   baseLimit: number = 0;
   maxTopLimit: number = 5;
-  edgeLimit: number = 24.5;
+  edgeLimit: number = 25 - 0.5;
 
   moveDistance: number = 0.1;
   rotationDegree: number = 2;

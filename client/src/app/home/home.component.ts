@@ -27,7 +27,7 @@ export class HomeComponent {
   key_s: number = 0;
   key_d: number = 0;
 
-  tickRate: number = 20; // 4Hz <= 10Hz
+  tickRate: number = 20; // 4Hz <= 20Hz
 
   container: HTMLElement | null = null;
   renderer = new THREE.WebGLRenderer({ antialias: true }); // give space to render the animated part (on HTML canvas) by webGl | antialias - smoothen the edges/pixels of an object
@@ -59,7 +59,12 @@ export class HomeComponent {
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
-  gridHelper = new THREE.GridHelper(150, 150);
+  planeDimension: number = 50;
+
+  gridHelper = new THREE.GridHelper(
+    this.planeDimension,
+    this.planeDimension / 5
+  );
   directionalLight = new THREE.DirectionalLight(0xffffff, 3.14);
   ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
   directionalLightHelper = new THREE.DirectionalLightHelper(
@@ -88,9 +93,14 @@ export class HomeComponent {
     private toastServiceService: ToastServiceService,
     private auxiliaryService: AuxiliaryService
   ) {
-    this.ambientLight.position.set(10, 10, 10);
+    this.ambientLight.position.set(60, 20, 60);
     this.directionalLight.position.set(-5, 10, -5);
     // this.directionalLight.castShadow = true;
+
+    const rocks: THREE.Mesh[] = this.auxiliaryService.getRocks();
+    rocks.forEach((rock: THREE.Mesh) => {
+      this.scene.add(rock);
+    });
 
     this.socketClientService
       .onPlayer(environment.playersPose)
@@ -100,9 +110,7 @@ export class HomeComponent {
 
     this.socketClientService.onPlayerLeft().subscribe((player: PayLoad) => {
       let playerToExit: Player | undefined = this.players.get(player.name);
-      console.log('player left: ', playerToExit);
       if (playerToExit) {
-        console.log('player gonna remove: ', playerToExit);
         this.scene.remove(playerToExit.player);
         this.players.delete(player.name);
       }
@@ -124,7 +132,11 @@ export class HomeComponent {
 
     let axesHelper = new THREE.AxesHelper(5);
 
-    let plane = new Plane(new THREE.Vector2(150, 150), 0.2, this.planeColor);
+    let plane = new Plane(
+      new THREE.Vector2(this.planeDimension, this.planeDimension),
+      0.2,
+      this.planeColor
+    );
 
     this.scene.add(
       // axesHelper,
@@ -166,9 +178,11 @@ export class HomeComponent {
         this.onNewPlayer(player);
       });
 
+    const limit = this.planeDimension / 2 - 0.5;
+
     this.pivot.userData['limit'] = {
-      min: new THREE.Vector3(-24.5, 0, -24.5),
-      max: new THREE.Vector3(24.5, 5, 24.5), // udjust to 0.5 to limit max height
+      min: new THREE.Vector3(-limit, 0, -limit),
+      max: new THREE.Vector3(limit, 5, limit), // udjust to 0.5 to limit max height
     };
 
     // now render the scene
