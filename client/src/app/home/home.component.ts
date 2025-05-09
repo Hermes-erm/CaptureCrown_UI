@@ -34,7 +34,7 @@ export class HomeComponent {
   scene = new THREE.Scene();
   camera: THREE.PerspectiveCamera | null = null; // better perspective camera over orthographic camera
 
-  planeColor: string = '#6fd66f'; //  #90EE90
+  planeColor: string = '#9dc29d'; //  #90EE90
   sphereColor: string = '0x32a852';
 
   /**
