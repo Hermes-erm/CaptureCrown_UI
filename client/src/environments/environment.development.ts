@@ -1,5 +1,5 @@
 export const environment = {
-  HOST: 'localhost',
+  HOST: '192.168.107.183',
   PORT: 8081,
   playersPose: 'player-pose',
   message: 'message',
