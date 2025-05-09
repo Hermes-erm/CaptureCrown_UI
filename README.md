@@ -1,10 +1,10 @@
-# chapture-crown
+# capture-crown
+
 ...
+
 ### 🕹️ Multiplayer 3D Lobby Game
 
 ## 🎥 video Demonstration
-
-
 
 ### 🚀 Features
 
