@@ -9,9 +9,9 @@ export class AuxiliaryService {
   // color: string = '#';
   hexColors: string = '0123456789ABCDEF';
 
-  maxEdge: number = 24.5;
+  maxEdge: number = 35 - 0.5;
 
-  rockCount: number = 24.5;
+  rockCount: number = 60;
   rocks: THREE.Mesh[] = [];
 
   constructor() {}

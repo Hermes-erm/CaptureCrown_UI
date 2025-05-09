@@ -59,7 +59,7 @@ export class HomeComponent {
   sphere: THREE.Mesh | null = null;
   btP: THREE.Object3D = new THREE.Object3D(); // object3d -> base class
 
-  planeDimension: number = 50;
+  planeDimension: number = 70;
 
   gridHelper = new THREE.GridHelper(
     this.planeDimension,
